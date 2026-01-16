@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sunday Recovery Planner — Generate • Schedule • Export</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1623;
+      --text:#e6edf3;
+      --muted:#9fb0c0;
+      --border:rgba(255,255,255,.08);
+      --shadow: 0 14px 50px rgba(0,0,0,.45);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --accent:#7dd3fc;
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --violet:#a78bfa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1100px 650px at 15% 0%, rgba(125,211,252,.12), transparent 55%),
+        radial-gradient(900px 600px at 85% 10%, rgba(52,211,153,.10), transparent 55%),
+        radial-gradient(700px 650px at 50% 100%, rgba(251,191,36,.08), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      padding:14px;
+    }
+    .container{ max-width:1020px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .inner{ padding:14px; }
+    @media (min-width: 860px){ body{ padding:24px; } .inner{ padding:16px; } }
+
+    h1{ margin:0 0 6px 0; font-size:20px; letter-spacing:.2px; }
+    .sub{ margin:0; color:var(--muted); line-height:1.35; font-size:13.5px; }
+
+    .topbar{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border); background: rgba(0,0,0,.16);
+      color:var(--muted); font-size:12px; font-weight:800; white-space:nowrap;
+    }
+    .pill strong{ color:var(--text); font-weight:950; }
+    .mono{ font-family:var(--mono); }
+
+    .sectionTitle{
+      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--muted); margin:0 0 10px 0;
+    }
+
+    /* Workflow hero */
+    .workflow{
+      display:grid;
+      gap:12px;
+    }
+    @media (min-width: 860px){
+      .workflow{ grid-template-columns: 1.25fr .75fr; align-items:stretch; }
+    }
+    .hero{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.14);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-height: 170px;
+    }
+    .heroActions{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (min-width: 860px){
+      .heroActions{ grid-template-columns: 1.2fr .8fr; }
+    }
+    .stack{ display:flex; flex-direction:column; gap:10px; }
+    button{
+      appearance:none;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:12px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      font-weight:900;
+      font-size:13px;
+      line-height:1.05;
+      min-height:44px;
+    }
+    button:hover{ background: rgba(255,255,255,.10); border-color: rgba(125,211,252,.35); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      background: linear-gradient(180deg, rgba(125,211,252,.24), rgba(125,211,252,.08));
+      border-color: rgba(125,211,252,.38);
+    }
+    button.good{
+      background: linear-gradient(180deg, rgba(52,211,153,.20), rgba(52,211,153,.06));
+      border-color: rgba(52,211,153,.34);
+    }
+    button.bad{
+      background: linear-gradient(180deg, rgba(251,113,133,.20), rgba(251,113,133,.06));
+      border-color: rgba(251,113,133,.34);
+    }
+    button.ghost{ background: rgba(255,255,255,.04); }
+
+    .hint{
+      margin:0;
+      color:var(--muted);
+      font-size:12.8px;
+      line-height:1.35;
+    }
+    .divider{ height:1px; background: rgba(255,255,255,.07); margin:12px 0; }
+
+    /* Plan */
+    .planGrid{
+      display:grid;
+      gap:10px;
+    }
+    @media (min-width: 860px){
+      .planGrid{ grid-template-columns: 1fr 1fr; }
+    }
+    .item{
+      border:1px solid rgba(255,255,255,.07);
+      background: rgba(0,0,0,.14);
+      border-radius:16px;
+      padding:12px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:132px;
+    }
+    .itemTop{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+    .tag{
+      font-size:12px; font-weight:950; letter-spacing:.08em; text-transform:uppercase;
+      padding:6px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10); color:var(--muted);
+    }
+    .tag.am{ border-color: rgba(125,211,252,.30); color: rgba(125,211,252,.92); }
+    .tag.pm{ border-color: rgba(167,139,250,.30); color: rgba(167,139,250,.92); }
+    .tag.mid{ border-color: rgba(52,211,153,.28); color: rgba(52,211,153,.92); }
+    .tag.deep{ border-color: rgba(251,191,36,.30); color: rgba(251,191,36,.92); }
+    .tag.anchor{ border-color: rgba(244,114,182,.30); color: rgba(244,114,182,.92); }
+
+    .badge{
+      font-size:12px; font-weight:950; padding:6px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .title{ margin:0; font-weight:950; font-size:14.5px; letter-spacing:.2px; line-height:1.25; }
+    .meta{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
+    .miniActions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
+    .miniActions button{ padding:10px 10px; border-radius:12px; min-height:40px; font-size:12.5px; font-weight:900; }
+
+    /* Settings */
+    .settingsGrid{
+      display:grid; gap:12px;
+    }
+    @media (min-width: 860px){
+      .settingsGrid{ grid-template-columns: 1fr 1fr; }
+    }
+    .control{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 12px; border-radius:14px;
+      background: rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .control input[type="checkbox"]{ margin-top:3px; transform: scale(1.15); }
+    .ctext{ display:flex; flex-direction:column; gap:2px; }
+    .ctext .label{ font-weight:950; font-size:13px; color:var(--text); }
+    .ctext .hint{ font-size:12.5px; color:var(--muted); line-height:1.25; margin:0; }
+
+    select, input[type="time"]{
+      width:100%;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 12px;
+      font-weight:900;
+      font-size:13px;
+      min-height:44px;
+      outline:none;
+    }
+    @media (min-width: 860px){ select, input[type="time"]{ width:auto; } }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    .rulesBox{
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.07);
+      background: rgba(0,0,0,.16);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .rulesBox strong{ color:var(--text); }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.82);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .25s ease, transform .25s ease;
+      max-width: calc(100% - 28px);
+      text-align:center;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+
+    details{ border:1px solid rgba(255,255,255,.07); border-radius:16px; background: rgba(0,0,0,.12); }
+    summary{ cursor:pointer; padding:12px 12px; font-weight:950; color:var(--text); }
+    details .inner{ padding:0 12px 12px 12px; }
+    .small{ margin:0; color:var(--muted); font-size:12.6px; line-height:1.35; }
+    a{ color: rgba(125,211,252,.92); }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="card">
+      <div class="inner">
+        <div class="topbar">
+          <div>
+            <h1>Sunday Recovery Planner</h1>
+            <p class="sub">
+              Sunday workflow: <strong>Generate</strong> → <strong>Schedule</strong> → <strong>Export to Google Calendar</strong>. No friction.
+            </p>
+          </div>
+          <div class="row">
+            <span class="pill">Week <strong id="weekLabel"></strong></span>
+            <span class="pill">Seed <strong id="seedLabel" class="mono"></strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workflow (front and center) -->
+    <div class="card">
+      <div class="inner">
+        <div class="sectionTitle">Sunday workflow</div>
+        <div class="workflow">
+          <div class="hero">
+            <div class="heroActions">
+              <button class="primary" id="generateBtn">Generate Full Week (default)</button>
+              <button class="good" id="exportBtn">Export Calendar (.ics)</button>
+            </div>
+
+            <p class="hint">
+              Default plan = <strong>AM ritual + PM ritual</strong> daily, <strong>3 mid-week events</strong>, plus <strong>1 deep reset</strong> and <strong>1 identity anchor</strong>.
+              You can still tweak everything below, but the default keeps this usable.
+            </p>
+
+            <div class="row">
+              <button class="ghost" id="copyBtn">Copy Plan Text</button>
+              <button class="bad" id="newSeedBtn">Shuffle (new seed)</button>
+              <button class="bad" id="resetBtn">Reset</button>
+            </div>
+
+            <p class="hint">
+              “Can’t do it?” Tap <strong>Swap Now</strong> on any item to generate an immediate alternative (no thinking, no guilt).
+            </p>
+          </div>
+
+          <div class="hero">
+            <div class="sectionTitle" style="margin:0 0 8px 0;">Calendar times (editable)</div>
+            <div class="row">
+              <div style="flex:1; min-width:180px">
+                <div class="small">AM ritual time</div>
+                <input type="time" id="amTime" value="06:30" />
+              </div>
+              <div style="flex:1; min-width:180px">
+                <div class="small">PM ritual time</div>
+                <input type="time" id="pmTime" value="20:30" />
+              </div>
+            </div>
+            <div class="row">
+              <div style="flex:1; min-width:180px">
+                <div class="small">Mid-week event time</div>
+                <input type="time" id="midTime" value="12:30" />
+              </div>
+              <div style="flex:1; min-width:180px">
+                <div class="small">Deep reset time</div>
+                <input type="time" id="deepTime" value="10:00" />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="sectionTitle" style="margin:0 0 8px 0;">Defaults (front & center)</div>
+            <div class="row">
+              <div style="flex:1; min-width:220px">
+                <div class="small">Mid-week events per week</div>
+                <select id="midCount">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3" selected>3 (default)</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+              <div style="flex:1; min-width:220px">
+                <div class="small">Variety level</div>
+                <select id="variety">
+                  <option value="low">Low</option>
+                  <option value="med" selected>Medium (default)</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:6px;">
+              <div class="pill">Timezone <strong id="tzLabel" class="mono"></strong></div>
+              <div class="pill">Week starts <strong id="weekStartLabel"></strong></div>
+            </div>
+
+            <p class="small" style="margin-top:6px;">
+              Export creates an <span class="mono">.ics</span> file you can import into Google Calendar.
+              (Native “direct insert” needs Google API + OAuth; this is the low-friction offline way.)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan -->
+    <div class="card">
+      <div class="inner">
+        <div class="sectionTitle">This week’s plan</div>
+        <div class="planGrid" id="planGrid"></div>
+
+        <div class="divider"></div>
+        <div class="sectionTitle">Rules</div>
+        <div class="rulesBox" id="rulesBox"></div>
+      </div>
+    </div>
+
+    <!-- Options (kept available but not in the way) -->
+    <details>
+      <summary>Advanced options (optional tweaks)</summary>
+      <div class="inner">
+        <div class="settingsGrid">
+          <div class="card" style="box-shadow:none; border-radius:16px;">
+            <div class="inner">
+              <div class="sectionTitle">Preferences</div>
+
+              <div class="control">
+                <input id="preferLowCost" type="checkbox" />
+                <div class="ctext">
+                  <div class="label">Prefer low-cost picks</div>
+                  <p class="hint">Bias away from high-cost items like float & spa (still allowed if variety is low).</p>
+                </div>
+              </div>
+
+              <div class="control">
+                <input id="includePlay" type="checkbox" checked />
+                <div class="ctext">
+                  <div class="label">Include “play” options</div>
+                  <p class="hint">Bouldering, photography walk, creative blocks. Addictive beats “disciplined.”</p>
+                </div>
+              </div>
+
+              <div class="control">
+                <input id="lockRules" type="checkbox" checked />
+                <div class="ctext">
+                  <div class="label">Lock the rules (90 days)</div>
+                  <p class="hint">Micro missed = no alcohol that day. Swap recovery for drinking = still do recovery.</p>
+                </div>
+              </div>
+
+              <p class="small">
+                If you want a true one-click “add to Google Calendar” button, you need a hosted page with Google OAuth.
+                This file stays private/offline and still exports cleanly.
+              </p>
+            </div>
+          </div>
+
+          <div class="card" style="box-shadow:none; border-radius:16px;">
+            <div class="inner">
+              <div class="sectionTitle">Immediate fallback</div>
+              <p class="small">
+                When you arrive at an event and can’t do it, use <strong>Swap Now</strong>.
+                It generates a same-category alternative that fits your preferences.
+              </p>
+
+              <div class="divider"></div>
+              <div class="sectionTitle">Panic button (low energy day)</div>
+              <div class="row">
+                <button class="bad" id="panicBtn">Panic Pick</button>
+                <button class="ghost" id="copyPanicBtn">Copy Panic Pick</button>
+              </div>
+              <p class="small" id="panicOut" style="margin-top:10px;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Sunday Recovery Planner — workflow-first.
+   - Defaults: 3 mid-week events + AM/PM rituals daily
+   - Swap Now on any item
+   - Export .ics for Google Calendar import (offline)
+*/
+
+const MENUS = {
+  am: [
+    {title:"Morning outdoor walk (20–30 min, no podcast)", meta:"Circadian + cortisol timing. Cheap. High stickiness.", cost:"low", tags:["sleep","mood"]},
+    {title:"Sunlight + coffee ritual outside (10–15 min)", meta:"Zero friction. Do it even on bad days.", cost:"low", tags:["sleep","mood"]},
+    {title:"Zone-2 easy cardio (25–35 min)", meta:"Stress buffering + sleep pressure.", cost:"low", tags:["fitness","sleep"]},
+    {title:"Short strength primer (12–18 min)", meta:"2–3 big moves. Identity reinforcement.", cost:"low", tags:["fitness"]},
+    {title:"Physiological sigh breathing (10 min)", meta:"Fast downshift before kids wake.", cost:"low", tags:["stress"]},
+    {title:"Mobility flow (12–20 min)", meta:"Neck/upper back tension relief.", cost:"low", tags:["pain","recovery"]},
+  ],
+  pm: [
+    {title:"Evening screen-dim + book (20–30 min)", meta:"Sleep quality & consistency.", cost:"low", tags:["sleep"]},
+    {title:"Hot shower + dim lights + 10 min breathing", meta:"Downshift without sedation.", cost:"low", tags:["stress","sleep"]},
+    {title:"Gentle stretch + body scan (15–25 min)", meta:"Parasympathetic activation; good for headaches.", cost:"low", tags:["stress","pain"]},
+    {title:"Prep tomorrow (10 min) + lights out", meta:"Reduces mental load; supports sleep.", cost:"low", tags:["clarity","sleep"]},
+    {title:"No screens 45 min before bed", meta:"Small change, huge compounding effect.", cost:"low", tags:["sleep"]},
+  ],
+  mid: [
+    {title:"Sauna + cold plunge", meta:"Replace a booze night. Mood + sleep wins.", cost:"mid", tags:["sleep","mood"]},
+    {title:"Ocean/river swim + hot shower", meta:"Clean dopamine + calm.", cost:"low", tags:["mood"]},
+    {title:"Long solo hike to a destination café", meta:"Movement + novelty + reward.", cost:"low", tags:["mood","clarity"]},
+    {title:"Bouldering / climbing session", meta:"Playful progress loop. Addictive.", cost:"mid", tags:["play","fitness"]},
+    {title:"Hard strength session + protein meal", meta:"Earned calm; anxiety drops after heavy work.", cost:"low", tags:["fitness","mood"]},
+    {title:"Sports massage / myotherapy", meta:"High ROI with tension headaches.", cost:"high", tags:["pain","recovery"]},
+    {title:"Float tank", meta:"Deep nervous-system downshift.", cost:"high", tags:["stress","sleep"]},
+    {title:"Evening bike ride (45–75 min)", meta:"Decompression + sleep pressure.", cost:"low", tags:["mood","sleep"]},
+    {title:"Creative solo block (60–90 min)", meta:"Restore identity beyond work/parenting.", cost:"low", tags:["play","clarity"]},
+  ],
+  deep: [
+    {title:"Home retreat half-day (books, naps, stretch, journal)", meta:"Zero errands. No screens. Real recovery.", cost:"low", tags:["sleep","stress"]},
+    {title:"Big nature day: hike + picnic + sunset", meta:"Perspective reset. Improves sleep pressure.", cost:"low", tags:["mood","sleep"]},
+    {title:"No-input half-day (no news/social/podcasts)", meta:"Silence for an overloaded brain.", cost:"low", tags:["clarity","stress"]},
+    {title:"Coastal drive + swim + long lunch solo", meta:"Holiday feeling without holiday budget.", cost:"mid", tags:["mood"]},
+    {title:"Day spa block (2–5 hrs)", meta:"Hard state-change. Use sparingly but decisively.", cost:"high", tags:["stress","sleep"]},
+    {title:"Float + massage combo", meta:"If you’re cooked, go nuclear.", cost:"high", tags:["stress","pain"]},
+    {title:"Photography walk + edit session", meta:"Creative deep play that feels like freedom.", cost:"low", tags:["play","clarity"]},
+  ],
+  anchor: [
+    {title:"Training identity: 3×/week same template", meta:"Pick ONE style. Consistency beats variety.", cost:"low", tags:["fitness"]},
+    {title:"Sleep identity: fixed wake time 6 days/week", meta:"Anchor circadian rhythm; bedtime follows.", cost:"low", tags:["sleep"]},
+    {title:"Recovery identity: sauna/cold OR swim ritual", meta:"Be ‘the person who does this’.", cost:"mid", tags:["sleep","mood"]},
+    {title:"Non-alcoholic reward: premium coffee ritual", meta:"Replace ‘drink = reward’ with cleaner reward.", cost:"low", tags:["mood"]},
+    {title:"Pain-proofing identity: daily mobility 10 min", meta:"Headaches often ride tension + poor recovery.", cost:"low", tags:["pain"]},
+    {title:"Alcohol containment: 2 days/week, never consecutive", meta:"Containment beats vague ‘cutting back’.", cost:"low", tags:["sleep","mood"]},
+    {title:"Focus identity: deep-work after AM ritual", meta:"Recovery fuels output; make it visible.", cost:"low", tags:["clarity"]},
+  ],
+  panic: [
+    {title:"10 min walk outside + water + salty snack", meta:"Stabilize physiology. Stop the spiral.", cost:"low"},
+    {title:"Hot shower + lights dim + 10 min breathing", meta:"Downshift without needing meds.", cost:"low"},
+    {title:"15 min mobility for neck/upper back", meta:"Often reduces tension headache intensity.", cost:"low"},
+    {title:"Early bed: phone out of room + earplugs", meta:"Pay sleep debt; everything gets easier.", cost:"low"},
+  ]
+};
+
+// ---------- Helpers ----------
+function xmur3(str){
+  let h = 1779033703 ^ str.length;
+  for (let i=0; i<str.length; i++){
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function(){
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= (h >>> 16)) >>> 0;
+  }
+}
+function mulberry32(a){
+  return function(){
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+function getISOWeek(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return { year: date.getUTCFullYear(), week: weekNo };
+}
+function weekSeed(){
+  const now = new Date();
+  const w = getISOWeek(now);
+  return `${w.year}-W${String(w.week).padStart(2,'0')}`;
+}
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+// ---------- State ----------
+const els = {
+  weekLabel: document.getElementById("weekLabel"),
+  seedLabel: document.getElementById("seedLabel"),
+  tzLabel: document.getElementById("tzLabel"),
+  weekStartLabel: document.getElementById("weekStartLabel"),
+
+  generateBtn: document.getElementById("generateBtn"),
+  exportBtn: document.getElementById("exportBtn"),
+  copyBtn: document.getElementById("copyBtn"),
+  newSeedBtn: document.getElementById("newSeedBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+
+  preferLowCost: document.getElementById("preferLowCost"),
+  includePlay: document.getElementById("includePlay"),
+  lockRules: document.getElementById("lockRules"),
+
+  midCount: document.getElementById("midCount"),
+  variety: document.getElementById("variety"),
+
+  amTime: document.getElementById("amTime"),
+  pmTime: document.getElementById("pmTime"),
+  midTime: document.getElementById("midTime"),
+  deepTime: document.getElementById("deepTime"),
+
+  planGrid: document.getElementById("planGrid"),
+  rulesBox: document.getElementById("rulesBox"),
+  toast: document.getElementById("toast"),
+
+  panicBtn: document.getElementById("panicBtn"),
+  copyPanicBtn: document.getElementById("copyPanicBtn"),
+  panicOut: document.getElementById("panicOut"),
+};
+
+const state = {
+  seed: weekSeed(),
+  rng: null,
+  plan: {
+    // AM/PM are single ritual picks repeated daily (low friction)
+    am: null,
+    pm: null,
+    // mid events: array length = midCount
+    mid: [],
+    deep: null,
+    anchor: null,
+  },
+  panic: null,
+};
+
+function init(){
+  setSeed(state.seed);
+  hydrateMeta();
+
+  // Defaults already set in HTML: midCount=3, variety=med, lockRules=true, includePlay=true.
+  renderRules();
+  renderPlan();
+
+  els.generateBtn.onclick = generateFullWeek;
+  els.exportBtn.onclick = exportICS;
+  els.copyBtn.onclick = copyPlanText;
+  els.newSeedBtn.onclick = newSeed;
+  els.resetBtn.onclick = resetPlan;
+
+  els.preferLowCost.onchange = () => toast("Preference saved.");
+  els.includePlay.onchange = () => toast("Preference saved.");
+  els.lockRules.onchange = () => { renderRules(); toast("Rules updated."); };
+
+  els.midCount.onchange = () => { renderPlan(); toast("Mid-week count updated."); };
+  els.variety.onchange = () => toast("Variety updated.");
+
+  els.panicBtn.onclick = panicPick;
+  els.copyPanicBtn.onclick = copyPanicPick;
+}
+
+function hydrateMeta(){
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
+  els.tzLabel.textContent = tz;
+
+  // We'll treat week start as Monday (ISO). Show date.
+  const {start} = getWeekBounds(new Date());
+  els.weekStartLabel.textContent = start.toLocaleDateString(undefined, { weekday:"short", year:"numeric", month:"short", day:"numeric" });
+}
+
+function setSeed(seed){
+  state.seed = seed;
+  els.weekLabel.textContent = seed;
+  els.seedLabel.textContent = seed;
+
+  const seedFn = xmur3(seed);
+  state.rng = mulberry32(seedFn());
+}
+
+function newSeed(){
+  const stamp = Date.now().toString(36).slice(-4);
+  setSeed(`${weekSeed()}-${stamp}`);
+  toast("Shuffled. Generate again.");
+}
+
+function resetPlan(){
+  state.plan = { am:null, pm:null, mid:[], deep:null, anchor:null };
+  state.panic = null;
+  els.panicOut.textContent = "";
+  renderPlan();
+  toast("Reset.");
+}
+
+// ---------- Selection logic ----------
+function getList(mode){
+  let list = MENUS[mode].slice();
+
+  if (!els.includePlay.checked){
+    list = list.filter(it => !((it.tags || []).includes("play")));
+  }
+  return list;
+}
+
+function weightFor(item){
+  const variety = els.variety.value; // low/med/high
+  const preferLow = els.preferLowCost.checked;
+
+  let wCost = 1;
+  if (preferLow){
+    if (item.cost === "low") wCost = 4;
+    else if (item.cost === "mid") wCost = 2;
+    else wCost = 1;
+  } else {
+    wCost = 2;
+  }
+
+  const tags = item.tags || [];
+  const isBasic = tags.includes("sleep") || tags.includes("fitness") || tags.includes("stress") || tags.includes("pain");
+  const isNovel = tags.includes("play") || tags.includes("clarity") || tags.includes("mood");
+
+  let wVar = 1;
+  if (variety === "low") wVar = isBasic ? 3 : 1;
+  else if (variety === "med") wVar = 2;
+  else wVar = isNovel ? 3 : 1;
+
+  return wCost * wVar;
+}
+
+function pickOne(mode, excludeTitles = new Set()){
+  const list = getList(mode).filter(it => !excludeTitles.has(it.title));
+  if (!list.length) return null;
+
+  const weights = list.map(weightFor);
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = state.rng() * total;
+  for (let i=0;i<list.length;i++){
+    r -= weights[i];
+    if (r <= 0) return list[i];
+  }
+  return list[list.length-1];
+}
+
+function generateFullWeek(){
+  state.plan.am = pickOne("am") || null;
+  state.plan.pm = pickOne("pm") || null;
+
+  const midCount = parseInt(els.midCount.value, 10);
+  state.plan.mid = [];
+  const used = new Set();
+  for (let i=0;i<midCount;i++){
+    const it = pickOne("mid", used) || pickOne("mid");
+    if (it){
+      state.plan.mid.push(it);
+      used.add(it.title);
+    }
+  }
+
+  state.plan.deep = pickOne("deep") || null;
+  state.plan.anchor = pickOne("anchor") || null;
+
+  renderPlan();
+  toast("Week generated. Export it.");
+}
+
+// Swap NOW: replace a specific item in-place, same category.
+function swapNow(category, index=null){
+  if (category === "mid"){
+    const used = new Set(state.plan.mid.map(x=>x.title));
+    const it = pickOne("mid", used) || pickOne("mid");
+    if (!it) return;
+    state.plan.mid[index] = it;
+    toast(`Swapped Mid-Week #${index+1}.`);
+  } else {
+    const currentTitle = state.plan[category]?.title;
+    const exclude = new Set(currentTitle ? [currentTitle] : []);
+    const it = pickOne(category, exclude) || pickOne(category);
+    if (!it) return;
+    state.plan[category] = it;
+    toast(`Swapped ${category.toUpperCase()}.`);
+  }
+  renderPlan();
+}
+
+// ---------- Rendering ----------
+function renderRules(){
+  const locked = els.lockRules.checked;
+  const lines = [];
+  lines.push(`<strong>Rules (90 days):</strong>`);
+  if (locked){
+    lines.push(`• Miss AM ritual ⇒ <strong>no alcohol that day</strong>.`);
+    lines.push(`• Swap recovery for drinking ⇒ <strong>still do (and pay for)</strong> the recovery block.`);
+    lines.push(`• Containment: <strong>max 2 drinking days/week</strong>, <strong>never consecutive</strong>.`);
+  } else {
+    lines.push(`• Suggested: max 2 drinking days/week; never consecutive.`);
+    lines.push(`• Suggested: miss AM ritual ⇒ no alcohol that day.`);
+  }
+  lines.push(`• Your job is execution, not negotiation.`);
+  els.rulesBox.innerHTML = lines.join("<br>");
+}
+
+function renderCard(tagClass, label, item, onSwap, costOverride=null){
+  const costLabel = costOverride || (item ? (item.cost === "low" ? "Low cost" : item.cost === "mid" ? "Mid cost" : "Higher cost") : "—");
+  const title = item ? item.title : "Not set";
+  const meta = item ? item.meta : "Generate the week first.";
+  return `
+    <div class="item">
+      <div class="itemTop">
+        <span class="tag ${tagClass}">${escapeHtml(label)}</span>
+        <span class="badge">${escapeHtml(costLabel)}</span>
+      </div>
+      <p class="title">${escapeHtml(title)}</p>
+      <p class="meta">${escapeHtml(meta)}</p>
+      <div class="miniActions">
+        <button class="ghost" onclick="${onSwap}">Swap Now</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderPlan(){
+  const parts = [];
+
+  parts.push(renderCard("am", "AM Ritual (Daily)", state.plan.am, "swapNow('am')"));
+  parts.push(renderCard("pm", "PM Ritual (Daily)", state.plan.pm, "swapNow('pm')"));
+
+  for (let i=0;i<parseInt(els.midCount.value,10);i++){
+    const it = state.plan.mid[i] || null;
+    parts.push(renderCard("mid", `Mid-Week Event #${i+1}`, it, `swapNow('mid',${i})`));
+  }
+
+  parts.push(renderCard("deep", "Deep Reset (Weekly)", state.plan.deep, "swapNow('deep')"));
+  parts.push(renderCard("anchor", "Identity Anchor (Weekly)", state.plan.anchor, "swapNow('anchor')"));
+
+  els.planGrid.innerHTML = parts.join("");
+}
+
+// expose swapNow globally for inline onclick
+window.swapNow = swapNow;
+
+// ---------- Panic ----------
+function panicPick(){
+  const it = MENUS.panic[Math.floor(state.rng() * MENUS.panic.length)];
+  state.panic = it;
+  els.panicOut.textContent = `Panic pick: ${it.title} — ${it.meta}`;
+  toast("Panic pick generated.");
+}
+async function copyPanicPick(){
+  if (!state.panic){ panicPick(); }
+  const text = `PANIC PICK: ${state.panic.title}\n${state.panic.meta}`;
+  await copyToClipboard(text);
+  toast("Panic pick copied.");
+}
+
+// ---------- Copy Plan Text ----------
+async function copyPlanText(){
+  const {start, end} = getWeekBounds(new Date());
+  const midCount = parseInt(els.midCount.value,10);
+  const lines = [];
+  lines.push(`SUNDAY RECOVERY PLAN — ${state.seed}`);
+  lines.push(`${start.toDateString()} → ${end.toDateString()}`);
+  lines.push("");
+  lines.push(`AM Ritual (daily): ${state.plan.am ? state.plan.am.title : "NOT SET"}`);
+  lines.push(`PM Ritual (daily): ${state.plan.pm ? state.plan.pm.title : "NOT SET"}`);
+  lines.push("");
+  for (let i=0;i<midCount;i++){
+    lines.push(`Mid-Week #${i+1}: ${state.plan.mid[i] ? state.plan.mid[i].title : "NOT SET"}`);
+  }
+  lines.push("");
+  lines.push(`Deep Reset: ${state.plan.deep ? state.plan.deep.title : "NOT SET"}`);
+  lines.push(`Identity Anchor: ${state.plan.anchor ? state.plan.anchor.title : "NOT SET"}`);
+  lines.push("");
+  lines.push(`Times: AM ${els.amTime.value}, PM ${els.pmTime.value}, Mid ${els.midTime.value}, Deep ${els.deepTime.value}`);
+  lines.push("");
+  lines.push("Rules:");
+  if (els.lockRules.checked){
+    lines.push("- Miss AM ritual => no alcohol that day");
+    lines.push("- Swap recovery for drinking => still do (and pay for) recovery block");
+    lines.push("- Max 2 drinking days/week; never consecutive");
+  } else {
+    lines.push("- Suggested: Max 2 drinking days/week; never consecutive");
+  }
+
+  await copyToClipboard(lines.join("\n"));
+  toast("Copied. Paste into Notes/Calendar.");
+}
+
+async function copyToClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+  } catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+}
+
+// ---------- Calendar Export (.ics) ----------
+function getWeekBounds(now){
+  // ISO week: Monday start
+  const d = new Date(now);
+  const day = (d.getDay() + 6) % 7; // Monday=0
+  const start = new Date(d);
+  start.setDate(d.getDate() - day);
+  start.setHours(0,0,0,0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return {start, end};
+}
+
+function toICSDateTimeLocal(date){
+  // Floating local time: YYYYMMDDTHHMMSS (no Z). Google Calendar will interpret in your timezone.
+  return `${date.getFullYear()}${pad2(date.getMonth()+1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
+}
+
+function buildEvent(summary, startDate, minutes, description){
+  const dtStart = toICSDateTimeLocal(startDate);
+  const dtEndDate = new Date(startDate.getTime() + minutes*60000);
+  const dtEnd = toICSDateTimeLocal(dtEndDate);
+  const uid = `${Math.random().toString(36).slice(2)}-${Date.now()}@recovery-planner`;
+  return [
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${toICSDateTimeLocal(new Date())}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${escapeICS(summary)}`,
+    `DESCRIPTION:${escapeICS(description || "")}`,
+    "END:VEVENT"
+  ].join("\r\n");
+}
+
+function escapeICS(s){
+  return String(s)
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function parseTimeToDate(baseDate, hhmm){
+  const [hh, mm] = hhmm.split(":").map(x=>parseInt(x,10));
+  const d = new Date(baseDate);
+  d.setHours(hh||0, mm||0, 0, 0);
+  return d;
+}
+
+function exportICS(){
+  // Require generated plan
+  if (!state.plan.am || !state.plan.pm || !state.plan.deep || !state.plan.anchor || !state.plan.mid.length){
+    toast("Generate the week first.");
+    return;
+  }
+
+  const {start} = getWeekBounds(new Date());
+  const midCount = parseInt(els.midCount.value,10);
+
+  const amMinutes = 25;   // default block length
+  const pmMinutes = 25;
+  const midMinutes = 90;
+  const deepMinutes = 240;
+  const anchorMinutes = 15;
+
+  const amTime = els.amTime.value || "06:30";
+  const pmTime = els.pmTime.value || "20:30";
+  const midTime = els.midTime.value || "12:30";
+  const deepTime = els.deepTime.value || "10:00";
+  const deepDayOffset = 6; // Sunday by default
+  const anchorDayOffset = 0; // Monday by default
+
+  // Place 3 mid-week events on Tue/Thu/Sat by default (or adapt if midCount changes)
+  const preferredMidOffsets = [1, 3, 5, 2, 4, 6]; // Tue, Thu, Sat, Wed, Fri, Sun...
+  const midOffsets = preferredMidOffsets.slice(0, midCount);
+
+  const events = [];
+
+  // AM/PM daily events Mon-Sun
+  for (let i=0;i<7;i++){
+    const dayDate = new Date(start);
+    dayDate.setDate(start.getDate() + i);
+
+    const amStart = parseTimeToDate(dayDate, amTime);
+    const pmStart = parseTimeToDate(dayDate, pmTime);
+
+    events.push(buildEvent(
+      `AM Ritual — ${state.plan.am.title}`,
+      amStart,
+      amMinutes,
+      state.plan.am.meta + "\\n\\nIf you can’t do it: hit Swap Now in the planner."
+    ));
+
+    events.push(buildEvent(
+      `PM Ritual — ${state.plan.pm.title}`,
+      pmStart,
+      pmMinutes,
+      state.plan.pm.meta + "\\n\\nIf you can’t do it: hit Swap Now in the planner."
+    ));
+  }
+
+  // Mid-week events
+  for (let i=0;i<midCount;i++){
+    const dayDate = new Date(start);
+    dayDate.setDate(start.getDate() + midOffsets[i]);
+    const midStart = parseTimeToDate(dayDate, midTime);
+
+    const it = state.plan.mid[i] || {title:"(not set)", meta:""};
+    events.push(buildEvent(
+      `Recharge — ${it.title}`,
+      midStart,
+      midMinutes,
+      it.meta + "\\n\\nRule: if you drink instead, you still do this block."
+    ));
+  }
+
+  // Deep reset on Sunday (default)
+  {
+    const dayDate = new Date(start);
+    dayDate.setDate(start.getDate() + deepDayOffset);
+    const deepStart = parseTimeToDate(dayDate, deepTime);
+
+    events.push(buildEvent(
+      `Deep Reset — ${state.plan.deep.title}`,
+      deepStart,
+      deepMinutes,
+      state.plan.deep.meta + "\\n\\nNo alcohol night before or after."
+    ));
+  }
+
+  // Anchor on Monday (default) as a short reminder
+  {
+    const dayDate = new Date(start);
+    dayDate.setDate(start.getDate() + anchorDayOffset);
+    const anchorStart = parseTimeToDate(dayDate, "09:00");
+
+    events.push(buildEvent(
+      `Identity Anchor — ${state.plan.anchor.title}`,
+      anchorStart,
+      anchorMinutes,
+      state.plan.anchor.meta
+    ));
+  }
+
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Sunday Recovery Planner//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...events,
+    "END:VCALENDAR"
+  ].join("\r\n");
+
+  const blob = new Blob([ics], {type:"text/calendar;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `RecoveryPlan-${state.seed}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  toast("ICS exported. Import into Google Calendar.");
+}
+
+// ---------- Toast ----------
+let toastTimer=null;
+function toast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>els.toast.classList.remove("show"), 1400);
+}
+
+init();
+</script>
+</body>
+</html>

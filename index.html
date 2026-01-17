@@ -7,7 +7,6 @@
   <style>
     :root{
       --bg:#0b0f14;
-      --panel:#0f1623;
       --text:#e6edf3;
       --muted:#9fb0c0;
       --border:rgba(255,255,255,.08);
@@ -15,11 +14,6 @@
       --radius:18px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      --accent:#7dd3fc;
-      --good:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
-      --violet:#a78bfa;
     }
     *{box-sizing:border-box}
     body{
@@ -63,14 +57,9 @@
       color:var(--muted); margin:0 0 10px 0;
     }
 
-    /* Workflow hero */
-    .workflow{
-      display:grid;
-      gap:12px;
-    }
-    @media (min-width: 860px){
-      .workflow{ grid-template-columns: 1.25fr .75fr; align-items:stretch; }
-    }
+    .workflow{ display:grid; gap:12px; }
+    @media (min-width: 860px){ .workflow{ grid-template-columns: 1.25fr .75fr; align-items:stretch; } }
+
     .hero{
       border:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.14);
@@ -81,15 +70,9 @@
       gap:12px;
       min-height: 170px;
     }
-    .heroActions{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (min-width: 860px){
-      .heroActions{ grid-template-columns: 1.2fr .8fr; }
-    }
-    .stack{ display:flex; flex-direction:column; gap:10px; }
+    .heroActions{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (min-width: 860px){ .heroActions{ grid-template-columns: 1.2fr .8fr; } }
+
     button{
       appearance:none;
       border:1px solid var(--border);
@@ -120,22 +103,11 @@
     }
     button.ghost{ background: rgba(255,255,255,.04); }
 
-    .hint{
-      margin:0;
-      color:var(--muted);
-      font-size:12.8px;
-      line-height:1.35;
-    }
+    .hint{ margin:0; color:var(--muted); font-size:12.8px; line-height:1.35; }
     .divider{ height:1px; background: rgba(255,255,255,.07); margin:12px 0; }
 
-    /* Plan */
-    .planGrid{
-      display:grid;
-      gap:10px;
-    }
-    @media (min-width: 860px){
-      .planGrid{ grid-template-columns: 1fr 1fr; }
-    }
+    .planGrid{ display:grid; gap:10px; }
+    @media (min-width: 860px){ .planGrid{ grid-template-columns: 1fr 1fr; } }
     .item{
       border:1px solid rgba(255,255,255,.07);
       background: rgba(0,0,0,.14);
@@ -170,13 +142,8 @@
     .miniActions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
     .miniActions button{ padding:10px 10px; border-radius:12px; min-height:40px; font-size:12.5px; font-weight:900; }
 
-    /* Settings */
-    .settingsGrid{
-      display:grid; gap:12px;
-    }
-    @media (min-width: 860px){
-      .settingsGrid{ grid-template-columns: 1fr 1fr; }
-    }
+    .settingsGrid{ display:grid; gap:12px; }
+    @media (min-width: 860px){ .settingsGrid{ grid-template-columns: 1fr 1fr; } }
     .control{
       display:flex; gap:10px; align-items:flex-start;
       padding:10px 12px; border-radius:14px;
@@ -188,7 +155,7 @@
     .ctext .label{ font-weight:950; font-size:13px; color:var(--text); }
     .ctext .hint{ font-size:12.5px; color:var(--muted); line-height:1.25; margin:0; }
 
-    select, input[type="time"]{
+    select, input[type="time"], input[type="date"]{
       width:100%;
       background: rgba(255,255,255,.06);
       border:1px solid var(--border);
@@ -200,7 +167,7 @@
       min-height:44px;
       outline:none;
     }
-    @media (min-width: 860px){ select, input[type="time"]{ width:auto; } }
+    @media (min-width: 860px){ select, input[type="time"], input[type="date"]{ width:auto; } }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
     .rulesBox{
@@ -239,31 +206,28 @@
     summary{ cursor:pointer; padding:12px 12px; font-weight:950; color:var(--text); }
     details .inner{ padding:0 12px 12px 12px; }
     .small{ margin:0; color:var(--muted); font-size:12.6px; line-height:1.35; }
-    a{ color: rgba(125,211,252,.92); }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <!-- Header -->
     <div class="card">
       <div class="inner">
         <div class="topbar">
           <div>
             <h1>Sunday Recovery Planner</h1>
             <p class="sub">
-              Sunday workflow: <strong>Generate</strong> → <strong>Schedule</strong> → <strong>Export to Google Calendar</strong>. No friction.
+              Fix applied: defaults to the <strong>next upcoming Sunday</strong> as the plan start date (so exports aren’t in the past).
             </p>
           </div>
           <div class="row">
-            <span class="pill">Week <strong id="weekLabel"></strong></span>
+            <span class="pill">Start <strong id="startLabel"></strong></span>
             <span class="pill">Seed <strong id="seedLabel" class="mono"></strong></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Workflow (front and center) -->
     <div class="card">
       <div class="inner">
         <div class="sectionTitle">Sunday workflow</div>
@@ -276,7 +240,7 @@
 
             <p class="hint">
               Default plan = <strong>AM ritual + PM ritual</strong> daily, <strong>3 mid-week events</strong>, plus <strong>1 deep reset</strong> and <strong>1 identity anchor</strong>.
-              You can still tweak everything below, but the default keeps this usable.
+              Use <strong>Swap Now</strong> on any card when reality changes.
             </p>
 
             <div class="row">
@@ -284,14 +248,27 @@
               <button class="bad" id="newSeedBtn">Shuffle (new seed)</button>
               <button class="bad" id="resetBtn">Reset</button>
             </div>
-
-            <p class="hint">
-              “Can’t do it?” Tap <strong>Swap Now</strong> on any item to generate an immediate alternative (no thinking, no guilt).
-            </p>
           </div>
 
           <div class="hero">
-            <div class="sectionTitle" style="margin:0 0 8px 0;">Calendar times (editable)</div>
+            <div class="sectionTitle" style="margin:0 0 8px 0;">Start date + times</div>
+
+            <div class="row">
+              <div style="flex:1; min-width:220px">
+                <div class="small">Plan start date (Sunday)</div>
+                <input type="date" id="startDate" />
+              </div>
+              <div style="flex:1; min-width:220px">
+                <div class="small">Mid-week events per week</div>
+                <select id="midCount">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3" selected>3 (default)</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+            </div>
+
             <div class="row">
               <div style="flex:1; min-width:180px">
                 <div class="small">AM ritual time</div>
@@ -302,30 +279,21 @@
                 <input type="time" id="pmTime" value="20:30" />
               </div>
             </div>
+
             <div class="row">
               <div style="flex:1; min-width:180px">
                 <div class="small">Mid-week event time</div>
                 <input type="time" id="midTime" value="12:30" />
               </div>
               <div style="flex:1; min-width:180px">
-                <div class="small">Deep reset time</div>
+                <div class="small">Deep reset time (start day)</div>
                 <input type="time" id="deepTime" value="10:00" />
               </div>
             </div>
 
             <div class="divider"></div>
 
-            <div class="sectionTitle" style="margin:0 0 8px 0;">Defaults (front & center)</div>
             <div class="row">
-              <div style="flex:1; min-width:220px">
-                <div class="small">Mid-week events per week</div>
-                <select id="midCount">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3" selected>3 (default)</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
               <div style="flex:1; min-width:220px">
                 <div class="small">Variety level</div>
                 <select id="variety">
@@ -336,21 +304,15 @@
               </div>
             </div>
 
-            <div class="row" style="margin-top:6px;">
-              <div class="pill">Timezone <strong id="tzLabel" class="mono"></strong></div>
-              <div class="pill">Week starts <strong id="weekStartLabel"></strong></div>
-            </div>
-
-            <p class="small" style="margin-top:6px;">
-              Export creates an <span class="mono">.ics</span> file you can import into Google Calendar.
-              (Native “direct insert” needs Google API + OAuth; this is the low-friction offline way.)
+            <p class="small">
+              Export creates an <span class="mono">.ics</span> file you import into Google Calendar.
+              (Direct “write to Google Calendar” needs OAuth + hosting.)
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Plan -->
     <div class="card">
       <div class="inner">
         <div class="sectionTitle">This week’s plan</div>
@@ -362,7 +324,6 @@
       </div>
     </div>
 
-    <!-- Options (kept available but not in the way) -->
     <details>
       <summary>Advanced options (optional tweaks)</summary>
       <div class="inner">
@@ -391,26 +352,14 @@
                 <input id="lockRules" type="checkbox" checked />
                 <div class="ctext">
                   <div class="label">Lock the rules (90 days)</div>
-                  <p class="hint">Micro missed = no alcohol that day. Swap recovery for drinking = still do recovery.</p>
+                  <p class="hint">Miss AM = no alcohol that day. Swap recovery for drinking = still do recovery.</p>
                 </div>
               </div>
-
-              <p class="small">
-                If you want a true one-click “add to Google Calendar” button, you need a hosted page with Google OAuth.
-                This file stays private/offline and still exports cleanly.
-              </p>
             </div>
           </div>
 
           <div class="card" style="box-shadow:none; border-radius:16px;">
             <div class="inner">
-              <div class="sectionTitle">Immediate fallback</div>
-              <p class="small">
-                When you arrive at an event and can’t do it, use <strong>Swap Now</strong>.
-                It generates a same-category alternative that fits your preferences.
-              </p>
-
-              <div class="divider"></div>
               <div class="sectionTitle">Panic button (low energy day)</div>
               <div class="row">
                 <button class="bad" id="panicBtn">Panic Pick</button>
@@ -427,11 +376,10 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Sunday Recovery Planner — workflow-first.
-   - Defaults: 3 mid-week events + AM/PM rituals daily
-   - Swap Now on any item
-   - Export .ics for Google Calendar import (offline)
-*/
+/* Key fix:
+   - Plan start date defaults to the NEXT upcoming Sunday (not the previous week’s Sunday).
+   - User can override start date via date picker.
+   - Export uses the selected start date as day 0 (Sunday start). */
 
 const MENUS = {
   am: [
@@ -486,7 +434,6 @@ const MENUS = {
   ]
 };
 
-// ---------- Helpers ----------
 function xmur3(str){
   let h = 1779033703 ^ str.length;
   for (let i=0; i<str.length; i++){
@@ -507,33 +454,17 @@ function mulberry32(a){
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 }
-function getISOWeek(d){
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
-  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  return { year: date.getUTCFullYear(), week: weekNo };
-}
-function weekSeed(){
-  const now = new Date();
-  const w = getISOWeek(now);
-  return `${w.year}-W${String(w.week).padStart(2,'0')}`;
-}
-function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, (m)=>({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
 }
-function pad2(n){ return String(n).padStart(2,'0'); }
+function pad2(n){ return String(n).padStart(2,"0"); }
 
-// ---------- State ----------
 const els = {
-  weekLabel: document.getElementById("weekLabel"),
+  startLabel: document.getElementById("startLabel"),
   seedLabel: document.getElementById("seedLabel"),
-  tzLabel: document.getElementById("tzLabel"),
-  weekStartLabel: document.getElementById("weekStartLabel"),
+  startDate: document.getElementById("startDate"),
 
   generateBtn: document.getElementById("generateBtn"),
   exportBtn: document.getElementById("exportBtn"),
@@ -555,120 +486,77 @@ const els = {
 
   planGrid: document.getElementById("planGrid"),
   rulesBox: document.getElementById("rulesBox"),
-  toast: document.getElementById("toast"),
 
   panicBtn: document.getElementById("panicBtn"),
   copyPanicBtn: document.getElementById("copyPanicBtn"),
   panicOut: document.getElementById("panicOut"),
+
+  toast: document.getElementById("toast"),
 };
 
 const state = {
-  seed: weekSeed(),
+  seed: "",
   rng: null,
-  plan: {
-    // AM/PM are single ritual picks repeated daily (low friction)
-    am: null,
-    pm: null,
-    // mid events: array length = midCount
-    mid: [],
-    deep: null,
-    anchor: null,
-  },
+  plan: { am:null, pm:null, mid:[], deep:null, anchor:null },
   panic: null,
 };
 
-function init(){
-  setSeed(state.seed);
-  hydrateMeta();
-
-  // Defaults already set in HTML: midCount=3, variety=med, lockRules=true, includePlay=true.
-  renderRules();
-  renderPlan();
-
-  els.generateBtn.onclick = generateFullWeek;
-  els.exportBtn.onclick = exportICS;
-  els.copyBtn.onclick = copyPlanText;
-  els.newSeedBtn.onclick = newSeed;
-  els.resetBtn.onclick = resetPlan;
-
-  els.preferLowCost.onchange = () => toast("Preference saved.");
-  els.includePlay.onchange = () => toast("Preference saved.");
-  els.lockRules.onchange = () => { renderRules(); toast("Rules updated."); };
-
-  els.midCount.onchange = () => { renderPlan(); toast("Mid-week count updated."); };
-  els.variety.onchange = () => toast("Variety updated.");
-
-  els.panicBtn.onclick = panicPick;
-  els.copyPanicBtn.onclick = copyPanicPick;
+function nextSunday(fromDate){
+  const d = new Date(fromDate);
+  d.setHours(0,0,0,0);
+  const day = d.getDay(); // Sun=0 ... Sat=6
+  const delta = (7 - day) % 7; // days until Sunday (0 if today Sunday)
+  // If today is Sunday, keep today as "next" (since your workflow is open on Sunday).
+  d.setDate(d.getDate() + delta);
+  return d;
 }
-
-function hydrateMeta(){
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
-  els.tzLabel.textContent = tz;
-
-  // We'll treat week start as Monday (ISO). Show date.
-  const {start} = getWeekBounds(new Date());
-  els.weekStartLabel.textContent = start.toLocaleDateString(undefined, { weekday:"short", year:"numeric", month:"short", day:"numeric" });
+function dateToYYYYMMDD(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 }
-
+function parseYYYYMMDDToLocalDate(yyyymmdd){
+  const [y,m,dd] = yyyymmdd.split("-").map(n=>parseInt(n,10));
+  return new Date(y, (m||1)-1, dd||1, 0,0,0,0);
+}
+function getStartDate(){
+  return parseYYYYMMDDToLocalDate(els.startDate.value);
+}
 function setSeed(seed){
   state.seed = seed;
-  els.weekLabel.textContent = seed;
   els.seedLabel.textContent = seed;
-
   const seedFn = xmur3(seed);
   state.rng = mulberry32(seedFn());
 }
-
-function newSeed(){
-  const stamp = Date.now().toString(36).slice(-4);
-  setSeed(`${weekSeed()}-${stamp}`);
-  toast("Shuffled. Generate again.");
+function refreshStartLabel(){
+  const d = getStartDate();
+  els.startLabel.textContent = d.toLocaleDateString(undefined, { weekday:"short", year:"numeric", month:"short", day:"numeric" });
 }
 
-function resetPlan(){
-  state.plan = { am:null, pm:null, mid:[], deep:null, anchor:null };
-  state.panic = null;
-  els.panicOut.textContent = "";
-  renderPlan();
-  toast("Reset.");
-}
-
-// ---------- Selection logic ----------
 function getList(mode){
   let list = MENUS[mode].slice();
-
   if (!els.includePlay.checked){
     list = list.filter(it => !((it.tags || []).includes("play")));
   }
   return list;
 }
-
 function weightFor(item){
-  const variety = els.variety.value; // low/med/high
+  const variety = els.variety.value;
   const preferLow = els.preferLowCost.checked;
 
-  let wCost = 1;
+  let wCost = 2;
   if (preferLow){
-    if (item.cost === "low") wCost = 4;
-    else if (item.cost === "mid") wCost = 2;
-    else wCost = 1;
-  } else {
-    wCost = 2;
+    wCost = (item.cost === "low") ? 4 : (item.cost === "mid") ? 2 : 1;
   }
 
   const tags = item.tags || [];
   const isBasic = tags.includes("sleep") || tags.includes("fitness") || tags.includes("stress") || tags.includes("pain");
   const isNovel = tags.includes("play") || tags.includes("clarity") || tags.includes("mood");
 
-  let wVar = 1;
+  let wVar = 2;
   if (variety === "low") wVar = isBasic ? 3 : 1;
-  else if (variety === "med") wVar = 2;
-  else wVar = isNovel ? 3 : 1;
+  else if (variety === "high") wVar = isNovel ? 3 : 1;
 
   return wCost * wVar;
 }
-
 function pickOne(mode, excludeTitles = new Set()){
   const list = getList(mode).filter(it => !excludeTitles.has(it.title));
   if (!list.length) return null;
@@ -705,7 +593,6 @@ function generateFullWeek(){
   toast("Week generated. Export it.");
 }
 
-// Swap NOW: replace a specific item in-place, same category.
 function swapNow(category, index=null){
   if (category === "mid"){
     const used = new Set(state.plan.mid.map(x=>x.title));
@@ -723,8 +610,8 @@ function swapNow(category, index=null){
   }
   renderPlan();
 }
+window.swapNow = swapNow;
 
-// ---------- Rendering ----------
 function renderRules(){
   const locked = els.lockRules.checked;
   const lines = [];
@@ -741,8 +628,8 @@ function renderRules(){
   els.rulesBox.innerHTML = lines.join("<br>");
 }
 
-function renderCard(tagClass, label, item, onSwap, costOverride=null){
-  const costLabel = costOverride || (item ? (item.cost === "low" ? "Low cost" : item.cost === "mid" ? "Mid cost" : "Higher cost") : "—");
+function renderCard(tagClass, label, item, onSwap){
+  const costLabel = item ? (item.cost === "low" ? "Low cost" : item.cost === "mid" ? "Mid cost" : "Higher cost") : "—";
   const title = item ? item.title : "Not set";
   const meta = item ? item.meta : "Generate the week first.";
   return `
@@ -759,44 +646,42 @@ function renderCard(tagClass, label, item, onSwap, costOverride=null){
     </div>
   `;
 }
-
 function renderPlan(){
   const parts = [];
-
   parts.push(renderCard("am", "AM Ritual (Daily)", state.plan.am, "swapNow('am')"));
   parts.push(renderCard("pm", "PM Ritual (Daily)", state.plan.pm, "swapNow('pm')"));
 
   for (let i=0;i<parseInt(els.midCount.value,10);i++){
-    const it = state.plan.mid[i] || null;
-    parts.push(renderCard("mid", `Mid-Week Event #${i+1}`, it, `swapNow('mid',${i})`));
+    parts.push(renderCard("mid", `Mid-Week Event #${i+1}`, state.plan.mid[i] || null, `swapNow('mid',${i})`));
   }
-
   parts.push(renderCard("deep", "Deep Reset (Weekly)", state.plan.deep, "swapNow('deep')"));
   parts.push(renderCard("anchor", "Identity Anchor (Weekly)", state.plan.anchor, "swapNow('anchor')"));
 
   els.planGrid.innerHTML = parts.join("");
 }
 
-// expose swapNow globally for inline onclick
-window.swapNow = swapNow;
-
-// ---------- Panic ----------
-function panicPick(){
-  const it = MENUS.panic[Math.floor(state.rng() * MENUS.panic.length)];
-  state.panic = it;
-  els.panicOut.textContent = `Panic pick: ${it.title} — ${it.meta}`;
-  toast("Panic pick generated.");
-}
-async function copyPanicPick(){
-  if (!state.panic){ panicPick(); }
-  const text = `PANIC PICK: ${state.panic.title}\n${state.panic.meta}`;
-  await copyToClipboard(text);
-  toast("Panic pick copied.");
+function toast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>els.toast.classList.remove("show"), 1400);
 }
 
-// ---------- Copy Plan Text ----------
+async function copyToClipboard(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch{
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+}
 async function copyPlanText(){
-  const {start, end} = getWeekBounds(new Date());
+  const start = getStartDate();
+  const end = new Date(start); end.setDate(start.getDate()+6); end.setHours(23,59,59,999);
+
   const midCount = parseInt(els.midCount.value,10);
   const lines = [];
   lines.push(`SUNDAY RECOVERY PLAN — ${state.seed}`);
@@ -813,52 +698,23 @@ async function copyPlanText(){
   lines.push(`Identity Anchor: ${state.plan.anchor ? state.plan.anchor.title : "NOT SET"}`);
   lines.push("");
   lines.push(`Times: AM ${els.amTime.value}, PM ${els.pmTime.value}, Mid ${els.midTime.value}, Deep ${els.deepTime.value}`);
-  lines.push("");
-  lines.push("Rules:");
-  if (els.lockRules.checked){
-    lines.push("- Miss AM ritual => no alcohol that day");
-    lines.push("- Swap recovery for drinking => still do (and pay for) recovery block");
-    lines.push("- Max 2 drinking days/week; never consecutive");
-  } else {
-    lines.push("- Suggested: Max 2 drinking days/week; never consecutive");
-  }
 
   await copyToClipboard(lines.join("\n"));
-  toast("Copied. Paste into Notes/Calendar.");
+  toast("Copied.");
 }
 
-async function copyToClipboard(text){
-  try{
-    await navigator.clipboard.writeText(text);
-  } catch(e){
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  }
+function parseTimeToDate(baseDate, hhmm){
+  const [hh, mm] = hhmm.split(":").map(x=>parseInt(x,10));
+  const d = new Date(baseDate);
+  d.setHours(hh||0, mm||0, 0, 0);
+  return d;
 }
-
-// ---------- Calendar Export (.ics) ----------
-function getWeekBounds(now){
-  // ISO week: Monday start
-  const d = new Date(now);
-  const day = (d.getDay() + 6) % 7; // Monday=0
-  const start = new Date(d);
-  start.setDate(d.getDate() - day);
-  start.setHours(0,0,0,0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23,59,59,999);
-  return {start, end};
-}
-
 function toICSDateTimeLocal(date){
-  // Floating local time: YYYYMMDDTHHMMSS (no Z). Google Calendar will interpret in your timezone.
   return `${date.getFullYear()}${pad2(date.getMonth()+1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
 }
-
+function escapeICS(s){
+  return String(s).replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+}
 function buildEvent(summary, startDate, minutes, description){
   const dtStart = toICSDateTimeLocal(startDate);
   const dtEndDate = new Date(startDate.getTime() + minutes*60000);
@@ -876,32 +732,16 @@ function buildEvent(summary, startDate, minutes, description){
   ].join("\r\n");
 }
 
-function escapeICS(s){
-  return String(s)
-    .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
-    .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
-}
-
-function parseTimeToDate(baseDate, hhmm){
-  const [hh, mm] = hhmm.split(":").map(x=>parseInt(x,10));
-  const d = new Date(baseDate);
-  d.setHours(hh||0, mm||0, 0, 0);
-  return d;
-}
-
 function exportICS(){
-  // Require generated plan
   if (!state.plan.am || !state.plan.pm || !state.plan.deep || !state.plan.anchor || !state.plan.mid.length){
     toast("Generate the week first.");
     return;
   }
 
-  const {start} = getWeekBounds(new Date());
+  const start = getStartDate(); // SUNDAY start (selected)
   const midCount = parseInt(els.midCount.value,10);
 
-  const amMinutes = 25;   // default block length
+  const amMinutes = 25;
   const pmMinutes = 25;
   const midMinutes = 90;
   const deepMinutes = 240;
@@ -911,16 +751,14 @@ function exportICS(){
   const pmTime = els.pmTime.value || "20:30";
   const midTime = els.midTime.value || "12:30";
   const deepTime = els.deepTime.value || "10:00";
-  const deepDayOffset = 6; // Sunday by default
-  const anchorDayOffset = 0; // Monday by default
 
-  // Place 3 mid-week events on Tue/Thu/Sat by default (or adapt if midCount changes)
-  const preferredMidOffsets = [1, 3, 5, 2, 4, 6]; // Tue, Thu, Sat, Wed, Fri, Sun...
+  // With a Sunday-start week: Tue/Thu/Sat are offsets 2,4,6.
+  const preferredMidOffsets = [2, 4, 6, 3, 5, 1, 0];
   const midOffsets = preferredMidOffsets.slice(0, midCount);
 
   const events = [];
 
-  // AM/PM daily events Mon-Sun
+  // AM/PM daily (Sun–Sat) starting at selected start date
   for (let i=0;i<7;i++){
     const dayDate = new Date(start);
     dayDate.setDate(start.getDate() + i);
@@ -934,7 +772,6 @@ function exportICS(){
       amMinutes,
       state.plan.am.meta + "\\n\\nIf you can’t do it: hit Swap Now in the planner."
     ));
-
     events.push(buildEvent(
       `PM Ritual — ${state.plan.pm.title}`,
       pmStart,
@@ -948,8 +785,7 @@ function exportICS(){
     const dayDate = new Date(start);
     dayDate.setDate(start.getDate() + midOffsets[i]);
     const midStart = parseTimeToDate(dayDate, midTime);
-
-    const it = state.plan.mid[i] || {title:"(not set)", meta:""};
+    const it = state.plan.mid[i];
     events.push(buildEvent(
       `Recharge — ${it.title}`,
       midStart,
@@ -958,12 +794,9 @@ function exportICS(){
     ));
   }
 
-  // Deep reset on Sunday (default)
+  // Deep reset on start Sunday (day 0)
   {
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + deepDayOffset);
-    const deepStart = parseTimeToDate(dayDate, deepTime);
-
+    const deepStart = parseTimeToDate(start, deepTime);
     events.push(buildEvent(
       `Deep Reset — ${state.plan.deep.title}`,
       deepStart,
@@ -972,12 +805,10 @@ function exportICS(){
     ));
   }
 
-  // Anchor on Monday (default) as a short reminder
+  // Anchor on Monday (day 1) 09:00
   {
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + anchorDayOffset);
-    const anchorStart = parseTimeToDate(dayDate, "09:00");
-
+    const mon = new Date(start); mon.setDate(start.getDate()+1);
+    const anchorStart = parseTimeToDate(mon, "09:00");
     events.push(buildEvent(
       `Identity Anchor — ${state.plan.anchor.title}`,
       anchorStart,
@@ -1007,16 +838,63 @@ function exportICS(){
   a.remove();
   URL.revokeObjectURL(url);
 
-  toast("ICS exported. Import into Google Calendar.");
+  toast("ICS exported.");
 }
 
-// ---------- Toast ----------
-let toastTimer=null;
-function toast(msg){
-  els.toast.textContent = msg;
-  els.toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>els.toast.classList.remove("show"), 1400);
+function panicPick(){
+  const it = MENUS.panic[Math.floor(state.rng() * MENUS.panic.length)];
+  state.panic = it;
+  els.panicOut.textContent = `Panic pick: ${it.title} — ${it.meta}`;
+  toast("Panic pick generated.");
+}
+async function copyPanicPick(){
+  if (!state.panic) panicPick();
+  await copyToClipboard(`PANIC PICK: ${state.panic.title}\n${state.panic.meta}`);
+  toast("Panic pick copied.");
+}
+
+function init(){
+  // Default start date = next upcoming Sunday (or today if Sunday)
+  const start = nextSunday(new Date());
+  els.startDate.value = dateToYYYYMMDD(start);
+  refreshStartLabel();
+
+  // Seed ties to chosen start date by default (predictable and repeatable)
+  setSeed(els.startDate.value);
+
+  renderRules();
+  renderPlan();
+
+  els.startDate.onchange = () => {
+    refreshStartLabel();
+    setSeed(els.startDate.value);
+    toast("Start date updated.");
+  };
+
+  els.generateBtn.onclick = generateFullWeek;
+  els.exportBtn.onclick = exportICS;
+  els.copyBtn.onclick = copyPlanText;
+  els.newSeedBtn.onclick = () => {
+    const stamp = Date.now().toString(36).slice(-4);
+    setSeed(`${els.startDate.value}-${stamp}`);
+    toast("Seed shuffled. Generate again.");
+  };
+  els.resetBtn.onclick = () => {
+    state.plan = { am:null, pm:null, mid:[], deep:null, anchor:null };
+    state.panic = null;
+    els.panicOut.textContent = "";
+    renderPlan();
+    toast("Reset.");
+  };
+
+  els.lockRules.onchange = () => { renderRules(); toast("Rules updated."); };
+  els.midCount.onchange = () => { renderPlan(); toast("Mid-week count updated."); };
+  els.variety.onchange = () => toast("Variety updated.");
+  els.preferLowCost.onchange = () => toast("Preference saved.");
+  els.includePlay.onchange = () => toast("Preference saved.");
+
+  els.panicBtn.onclick = panicPick;
+  els.copyPanicBtn.onclick = copyPanicPick;
 }
 
 init();

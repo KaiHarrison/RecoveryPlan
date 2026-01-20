@@ -1,989 +1,787 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sunday Recovery Planner — Generate • Schedule • Export</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sunday Recovery Planner</title>
   <style>
     :root{
-      --bg:#0b0f14;
-      --panel:#0f1623;
-      --text:#e6edf3;
-      --muted:#9fb0c0;
-      --border:rgba(255,255,255,.08);
-      --shadow: 0 14px 50px rgba(0,0,0,.45);
-      --radius:18px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      --accent:#7dd3fc;
-      --good:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
-      --violet:#a78bfa;
+      --bg:#0b0f14; --panel:#0f1623; --text:#e6edf3; --muted:#9fb0c0;
+      --border:rgba(255,255,255,.08); --shadow:0 14px 50px rgba(0,0,0,.45);
+      --radius:18px; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      --accent:rgba(125,211,252,.9); --good:rgba(52,211,153,.9); --bad:rgba(251,113,133,.9);
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
+      margin:0; font-family:var(--sans); color:var(--text); min-height:100vh;
       background:
         radial-gradient(1100px 650px at 15% 0%, rgba(125,211,252,.12), transparent 55%),
         radial-gradient(900px 600px at 85% 10%, rgba(52,211,153,.10), transparent 55%),
         radial-gradient(700px 650px at 50% 100%, rgba(251,191,36,.08), transparent 60%),
         var(--bg);
-      min-height:100vh;
       padding:14px;
     }
-    .container{ max-width:1020px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+    .container{max-width:1020px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
     }
-    .inner{ padding:14px; }
-    @media (min-width: 860px){ body{ padding:24px; } .inner{ padding:16px; } }
-
-    h1{ margin:0 0 6px 0; font-size:20px; letter-spacing:.2px; }
-    .sub{ margin:0; color:var(--muted); line-height:1.35; font-size:13.5px; }
-
-    .topbar{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+    .inner{padding:14px}
+    @media (min-width:860px){ body{padding:24px} .inner{padding:16px} }
+    h1{margin:0 0 6px 0;font-size:20px;letter-spacing:.2px}
+    .sub{margin:0;color:var(--muted);line-height:1.35;font-size:13.5px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .topbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
     .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius:999px;
-      border:1px solid var(--border); background: rgba(0,0,0,.16);
-      color:var(--muted); font-size:12px; font-weight:800; white-space:nowrap;
+      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
+      border:1px solid var(--border);background:rgba(0,0,0,.16);
+      color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;
     }
-    .pill strong{ color:var(--text); font-weight:950; }
-    .mono{ font-family:var(--mono); }
-
+    .pill strong{color:var(--text);font-weight:950}
+    .mono{font-family:var(--mono)}
     .sectionTitle{
-      font-size:12px; letter-spacing:.12em; text-transform:uppercase;
-      color:var(--muted); margin:0 0 10px 0;
+      font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px 0;
     }
+    .hint{margin:0;color:var(--muted);font-size:12.8px;line-height:1.35}
+    .divider{height:1px;background:rgba(255,255,255,.07);margin:12px 0}
 
-    /* Workflow hero */
-    .workflow{
-      display:grid;
-      gap:12px;
-    }
-    @media (min-width: 860px){
-      .workflow{ grid-template-columns: 1.25fr .75fr; align-items:stretch; }
-    }
-    .hero{
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.14);
-      border-radius:16px;
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      min-height: 170px;
-    }
-    .heroActions{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-    @media (min-width: 860px){
-      .heroActions{ grid-template-columns: 1.2fr .8fr; }
-    }
-    .stack{ display:flex; flex-direction:column; gap:10px; }
+    /* CTA + buttons */
     button{
-      appearance:none;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.06);
-      color:var(--text);
-      padding:12px 12px;
-      border-radius:14px;
-      cursor:pointer;
-      transition: transform .06s ease, background .15s ease, border-color .15s ease;
-      font-weight:900;
-      font-size:13px;
-      line-height:1.05;
-      min-height:44px;
+      appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);
+      padding:12px 12px;border-radius:14px;cursor:pointer;font-weight:950;font-size:13px;line-height:1.05;min-height:44px;
+      transition:transform .06s ease, background .15s ease, border-color .15s ease;
     }
-    button:hover{ background: rgba(255,255,255,.10); border-color: rgba(125,211,252,.35); }
-    button:active{ transform: translateY(1px); }
-    button.primary{
-      background: linear-gradient(180deg, rgba(125,211,252,.24), rgba(125,211,252,.08));
-      border-color: rgba(125,211,252,.38);
-    }
-    button.good{
-      background: linear-gradient(180deg, rgba(52,211,153,.20), rgba(52,211,153,.06));
-      border-color: rgba(52,211,153,.34);
-    }
-    button.bad{
-      background: linear-gradient(180deg, rgba(251,113,133,.20), rgba(251,113,133,.06));
-      border-color: rgba(251,113,133,.34);
-    }
-    button.ghost{ background: rgba(255,255,255,.04); }
-
-    .hint{
-      margin:0;
-      color:var(--muted);
-      font-size:12.8px;
-      line-height:1.35;
-    }
-    .divider{ height:1px; background: rgba(255,255,255,.07); margin:12px 0; }
-
-    /* Plan */
-    .planGrid{
-      display:grid;
-      gap:10px;
-    }
-    @media (min-width: 860px){
-      .planGrid{ grid-template-columns: 1fr 1fr; }
-    }
-    .item{
-      border:1px solid rgba(255,255,255,.07);
-      background: rgba(0,0,0,.14);
-      border-radius:16px;
-      padding:12px 12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:132px;
-    }
-    .itemTop{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
-    .tag{
-      font-size:12px; font-weight:950; letter-spacing:.08em; text-transform:uppercase;
-      padding:6px 8px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.10); color:var(--muted);
-    }
-    .tag.am{ border-color: rgba(125,211,252,.30); color: rgba(125,211,252,.92); }
-    .tag.pm{ border-color: rgba(167,139,250,.30); color: rgba(167,139,250,.92); }
-    .tag.mid{ border-color: rgba(52,211,153,.28); color: rgba(52,211,153,.92); }
-    .tag.deep{ border-color: rgba(251,191,36,.30); color: rgba(251,191,36,.92); }
-    .tag.anchor{ border-color: rgba(244,114,182,.30); color: rgba(244,114,182,.92); }
-
-    .badge{
-      font-size:12px; font-weight:950; padding:6px 8px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      color:var(--muted);
-      background: rgba(255,255,255,.04);
-      white-space:nowrap;
-    }
-    .title{ margin:0; font-weight:950; font-size:14.5px; letter-spacing:.2px; line-height:1.25; }
-    .meta{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
-    .miniActions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:auto; }
-    .miniActions button{ padding:10px 10px; border-radius:12px; min-height:40px; font-size:12.5px; font-weight:900; }
-
-    /* Settings */
-    .settingsGrid{
-      display:grid; gap:12px;
-    }
-    @media (min-width: 860px){
-      .settingsGrid{ grid-template-columns: 1fr 1fr; }
-    }
-    .control{
-      display:flex; gap:10px; align-items:flex-start;
-      padding:10px 12px; border-radius:14px;
-      background: rgba(0,0,0,.14);
-      border:1px solid rgba(255,255,255,.06);
-    }
-    .control input[type="checkbox"]{ margin-top:3px; transform: scale(1.15); }
-    .ctext{ display:flex; flex-direction:column; gap:2px; }
-    .ctext .label{ font-weight:950; font-size:13px; color:var(--text); }
-    .ctext .hint{ font-size:12.5px; color:var(--muted); line-height:1.25; margin:0; }
-
-    select, input[type="time"]{
+    button:hover{background:rgba(255,255,255,.10);border-color:rgba(125,211,252,.35)}
+    button:active{transform:translateY(1px)}
+    .primary{
       width:100%;
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      color:var(--text);
-      border-radius:14px;
-      padding:12px 12px;
-      font-weight:900;
-      font-size:13px;
-      min-height:44px;
-      outline:none;
+      background:linear-gradient(180deg, rgba(125,211,252,.28), rgba(125,211,252,.08));
+      border-color:rgba(125,211,252,.40);
+      font-size:14px;
+      min-height:52px;
     }
-    @media (min-width: 860px){ select, input[type="time"]{ width:auto; } }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .mini{padding:10px 10px;border-radius:12px;min-height:40px;font-size:12.5px}
+    .good{border-color:rgba(52,211,153,.34);background:linear-gradient(180deg, rgba(52,211,153,.18), rgba(52,211,153,.06))}
+    .bad{border-color:rgba(251,113,133,.34);background:linear-gradient(180deg, rgba(251,113,133,.18), rgba(251,113,133,.06))}
+    .ghost{background:rgba(255,255,255,.04)}
 
-    .rulesBox{
-      padding:12px 12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.07);
-      background: rgba(0,0,0,.16);
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.35;
+    /* Plan cards */
+    .planGrid{display:grid;gap:10px}
+    @media (min-width:860px){ .planGrid{grid-template-columns:1fr 1fr} }
+    .item{
+      border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.14);border-radius:16px;padding:12px;
+      display:flex;flex-direction:column;gap:10px;min-height:148px;
     }
-    .rulesBox strong{ color:var(--text); }
+    .itemTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+    .tag{
+      font-size:12px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;padding:6px 8px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);color:var(--muted);
+    }
+    .tag.am{border-color:rgba(125,211,252,.30);color:rgba(125,211,252,.92)}
+    .tag.pm{border-color:rgba(167,139,250,.30);color:rgba(167,139,250,.92)}
+    .tag.mid{border-color:rgba(52,211,153,.28);color:rgba(52,211,153,.92)}
+    .tag.deep{border-color:rgba(251,191,36,.30);color:rgba(251,191,36,.92)}
+    .tag.anchor{border-color:rgba(244,114,182,.30);color:rgba(244,114,182,.92)}
+    .badge{
+      font-size:12px;font-weight:950;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);background:rgba(255,255,255,.04);white-space:nowrap;
+    }
+    .title{margin:0;font-weight:950;font-size:14.5px;letter-spacing:.2px;line-height:1.25}
+    .meta{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+    .actions button{flex:1;min-width:120px}
+
+    /* Inputs / accordion */
+    details{border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(0,0,0,.12)}
+    summary{cursor:pointer;padding:12px;font-weight:950;color:var(--text)}
+    details .inner{padding:0 12px 12px 12px}
+    select,input[type="time"],input[type="date"]{
+      width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);
+      border-radius:14px;padding:12px;font-weight:950;font-size:13px;min-height:44px;outline:none;
+    }
+    @media (min-width:860px){ select,input[type="time"],input[type="date"]{width:auto} }
+    .field{flex:1;min-width:220px}
+    .small{margin:0;color:var(--muted);font-size:12.6px;line-height:1.35}
+    .error{color:rgba(251,113,133,.95);font-weight:950;font-size:12.5px;margin:6px 0 0 0;display:none}
 
     .toast{
-      position:fixed;
-      left:50%;
-      bottom:18px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.82);
-      border:1px solid rgba(255,255,255,.12);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:13px;
-      font-weight:900;
-      box-shadow: 0 10px 30px rgba(0,0,0,.45);
-      opacity:0;
-      pointer-events:none;
-      transition: opacity .25s ease, transform .25s ease;
-      max-width: calc(100% - 28px);
-      text-align:center;
+      position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+      background:rgba(0,0,0,.82);border:1px solid rgba(255,255,255,.12);
+      color:var(--text);padding:10px 12px;border-radius:999px;font-size:13px;font-weight:950;
+      box-shadow:0 10px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;
+      transition:opacity .25s ease, transform .25s ease;max-width:calc(100% - 28px);text-align:center;
     }
-    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-2px); }
-
-    details{ border:1px solid rgba(255,255,255,.07); border-radius:16px; background: rgba(0,0,0,.12); }
-    summary{ cursor:pointer; padding:12px 12px; font-weight:950; color:var(--text); }
-    details .inner{ padding:0 12px 12px 12px; }
-    .small{ margin:0; color:var(--muted); font-size:12.6px; line-height:1.35; }
-    a{ color: rgba(125,211,252,.92); }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-2px)}
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <!-- Header -->
-    <div class="card">
-      <div class="inner">
-        <div class="topbar">
-          <div>
-            <h1>Sunday Recovery Planner</h1>
-            <p class="sub">
-              Sunday workflow: <strong>Generate</strong> → <strong>Schedule</strong> → <strong>Export to Google Calendar</strong>. No friction.
-            </p>
-          </div>
-          <div class="row">
-            <span class="pill">Week <strong id="weekLabel"></strong></span>
-            <span class="pill">Seed <strong id="seedLabel" class="mono"></strong></span>
-          </div>
+<div class="container">
+
+  <!-- Header -->
+  <div class="card">
+    <div class="inner">
+      <div class="topbar">
+        <div>
+          <h1>Sunday Recovery Planner</h1>
+          <p class="sub">
+            One-click weekly plan → exports an <span class="mono">.ics</span> for Google Calendar import.
+            Default start date is the <strong>next upcoming Sunday</strong>.
+          </p>
+        </div>
+        <div class="row">
+          <span class="pill">Start <strong id="startLabel"></strong></span>
+          <span class="pill">Seed <strong id="seedLabel" class="mono"></strong></span>
+          <span class="pill">TZ <strong class="mono">Australia/Perth</strong></span>
         </div>
       </div>
     </div>
-
-    <!-- Workflow (front and center) -->
-    <div class="card">
-      <div class="inner">
-        <div class="sectionTitle">Sunday workflow</div>
-        <div class="workflow">
-          <div class="hero">
-            <div class="heroActions">
-              <button class="primary" id="generateBtn">Generate Full Week (default)</button>
-              <button class="good" id="exportBtn">Export Calendar (.ics)</button>
-            </div>
-
-            <p class="hint">
-              Default plan = <strong>AM ritual + PM ritual</strong> daily, <strong>3 mid-week events</strong>, plus <strong>1 deep reset</strong> and <strong>1 identity anchor</strong>.
-              You can still tweak everything below, but the default keeps this usable.
-            </p>
-
-            <div class="row">
-              <button class="ghost" id="copyBtn">Copy Plan Text</button>
-              <button class="bad" id="newSeedBtn">Shuffle (new seed)</button>
-              <button class="bad" id="resetBtn">Reset</button>
-            </div>
-
-            <p class="hint">
-              “Can’t do it?” Tap <strong>Swap Now</strong> on any item to generate an immediate alternative (no thinking, no guilt).
-            </p>
-          </div>
-
-          <div class="hero">
-            <div class="sectionTitle" style="margin:0 0 8px 0;">Calendar times (editable)</div>
-            <div class="row">
-              <div style="flex:1; min-width:180px">
-                <div class="small">AM ritual time</div>
-                <input type="time" id="amTime" value="06:30" />
-              </div>
-              <div style="flex:1; min-width:180px">
-                <div class="small">PM ritual time</div>
-                <input type="time" id="pmTime" value="20:30" />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1; min-width:180px">
-                <div class="small">Mid-week event time</div>
-                <input type="time" id="midTime" value="12:30" />
-              </div>
-              <div style="flex:1; min-width:180px">
-                <div class="small">Deep reset time</div>
-                <input type="time" id="deepTime" value="10:00" />
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="sectionTitle" style="margin:0 0 8px 0;">Defaults (front & center)</div>
-            <div class="row">
-              <div style="flex:1; min-width:220px">
-                <div class="small">Mid-week events per week</div>
-                <select id="midCount">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3" selected>3 (default)</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-              <div style="flex:1; min-width:220px">
-                <div class="small">Variety level</div>
-                <select id="variety">
-                  <option value="low">Low</option>
-                  <option value="med" selected>Medium (default)</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:6px;">
-              <div class="pill">Timezone <strong id="tzLabel" class="mono"></strong></div>
-              <div class="pill">Week starts <strong id="weekStartLabel"></strong></div>
-            </div>
-
-            <p class="small" style="margin-top:6px;">
-              Export creates an <span class="mono">.ics</span> file you can import into Google Calendar.
-              (Native “direct insert” needs Google API + OAuth; this is the low-friction offline way.)
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Plan -->
-    <div class="card">
-      <div class="inner">
-        <div class="sectionTitle">This week’s plan</div>
-        <div class="planGrid" id="planGrid"></div>
-
-        <div class="divider"></div>
-        <div class="sectionTitle">Rules</div>
-        <div class="rulesBox" id="rulesBox"></div>
-      </div>
-    </div>
-
-    <!-- Options (kept available but not in the way) -->
-    <details>
-      <summary>Advanced options (optional tweaks)</summary>
-      <div class="inner">
-        <div class="settingsGrid">
-          <div class="card" style="box-shadow:none; border-radius:16px;">
-            <div class="inner">
-              <div class="sectionTitle">Preferences</div>
-
-              <div class="control">
-                <input id="preferLowCost" type="checkbox" />
-                <div class="ctext">
-                  <div class="label">Prefer low-cost picks</div>
-                  <p class="hint">Bias away from high-cost items like float & spa (still allowed if variety is low).</p>
-                </div>
-              </div>
-
-              <div class="control">
-                <input id="includePlay" type="checkbox" checked />
-                <div class="ctext">
-                  <div class="label">Include “play” options</div>
-                  <p class="hint">Bouldering, photography walk, creative blocks. Addictive beats “disciplined.”</p>
-                </div>
-              </div>
-
-              <div class="control">
-                <input id="lockRules" type="checkbox" checked />
-                <div class="ctext">
-                  <div class="label">Lock the rules (90 days)</div>
-                  <p class="hint">Micro missed = no alcohol that day. Swap recovery for drinking = still do recovery.</p>
-                </div>
-              </div>
-
-              <p class="small">
-                If you want a true one-click “add to Google Calendar” button, you need a hosted page with Google OAuth.
-                This file stays private/offline and still exports cleanly.
-              </p>
-            </div>
-          </div>
-
-          <div class="card" style="box-shadow:none; border-radius:16px;">
-            <div class="inner">
-              <div class="sectionTitle">Immediate fallback</div>
-              <p class="small">
-                When you arrive at an event and can’t do it, use <strong>Swap Now</strong>.
-                It generates a same-category alternative that fits your preferences.
-              </p>
-
-              <div class="divider"></div>
-              <div class="sectionTitle">Panic button (low energy day)</div>
-              <div class="row">
-                <button class="bad" id="panicBtn">Panic Pick</button>
-                <button class="ghost" id="copyPanicBtn">Copy Panic Pick</button>
-              </div>
-              <p class="small" id="panicOut" style="margin-top:10px;"></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </details>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <!-- Above-the-fold workflow -->
+  <div class="card">
+    <div class="inner">
+      <div class="sectionTitle">Weekly flow</div>
+
+      <!-- ONE big CTA -->
+      <button class="primary" id="ctaBtn">Generate + Export to Google Calendar</button>
+      <p class="hint" style="margin-top:10px">
+        No fiddling: AM + PM daily, <strong>3</strong> mid-week events, deep reset, anchor.
+        If life changes, hit <strong>Swap Now</strong> or <strong>Panic Swap</strong> on any card and export again.
+      </p>
+
+      <div class="divider"></div>
+
+      <!-- Secondary controls -->
+      <div class="row">
+        <button class="mini ghost" id="generateBtn">Generate only</button>
+        <button class="mini good" id="exportBtn">Export only</button>
+        <button class="mini ghost" id="copyBtn">Copy plan text</button>
+      </div>
+
+      <!-- Inline validation / guardrails -->
+      <p class="error" id="inlineError"></p>
+
+      <details style="margin-top:12px">
+        <summary>Import instructions (Google Calendar)</summary>
+        <div class="inner">
+          <p class="small">
+            Google Calendar (web): Settings → Import &amp; export → Import → select the downloaded <span class="mono">.ics</span> → choose calendar → Import.
+          </p>
+          <div class="row" style="margin-top:10px">
+            <button class="mini ghost" id="copyImportBtn">Copy import instructions</button>
+          </div>
+        </div>
+      </details>
+
+    </div>
+  </div>
+
+  <!-- Plan display -->
+  <div class="card">
+    <div class="inner">
+      <div class="sectionTitle">This week’s plan</div>
+      <div class="planGrid" id="planGrid"></div>
+      <div class="divider"></div>
+      <p class="small" id="planFootnote"></p>
+    </div>
+  </div>
+
+  <!-- Advanced options (collapsed) -->
+  <details>
+    <summary>Advanced options (rarely needed)</summary>
+    <div class="inner">
+      <div class="row">
+        <div class="field">
+          <div class="small">Plan start date (Sunday)</div>
+          <input type="date" id="startDate"/>
+        </div>
+        <div class="field">
+          <div class="small">Mid-week events per week</div>
+          <select id="midCount">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3 (default)</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="field">
+          <div class="small">AM time</div>
+          <input type="time" id="amTime" value="06:30"/>
+        </div>
+        <div class="field">
+          <div class="small">PM time</div>
+          <input type="time" id="pmTime" value="20:30"/>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="field">
+          <div class="small">Mid-week time</div>
+          <input type="time" id="midTime" value="12:30"/>
+        </div>
+        <div class="field">
+          <div class="small">Deep reset time (Sunday)</div>
+          <input type="time" id="deepTime" value="10:00"/>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div class="field">
+          <div class="small">Variety level</div>
+          <select id="variety">
+            <option value="low">Low</option>
+            <option value="med" selected>Medium (default)</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="small">Preferences</div>
+          <div class="row">
+            <label class="small"><input type="checkbox" id="preferLowCost"/> Low-cost bias</label>
+            <label class="small"><input type="checkbox" id="includePlay" checked/> Include play</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="row">
+        <button class="mini bad" id="shuffleSeedBtn">Shuffle seed</button>
+        <button class="mini bad" id="resetBtn">Reset plan</button>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        Note: calendar imports are file-based. Deterministic UIDs reduce duplicates on re-import, but some clients may still duplicate if you import multiple times.
+      </p>
+    </div>
+  </details>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* Sunday Recovery Planner — workflow-first.
-   - Defaults: 3 mid-week events + AM/PM rituals daily
-   - Swap Now on any item
-   - Export .ics for Google Calendar import (offline)
-*/
+/* ============================================================
+   STRUCTURE-ONLY VERSION
+   - Keeps your existing logic
+   - One-click Generate+Export
+   - Next-Sunday default start date
+   - Swap Now + Panic Swap per item
+   - Deterministic UID + TZID Australia/Perth in ICS
+   - Minimal placeholder activity library (we expand next)
+   ============================================================ */
 
-const MENUS = {
+/*** 1) Activity Library (PLACEHOLDER)
+     Next message you’ll replace/expand these pools while preserving fields.
+     REQUIRED FIELDS per activity:
+     { id, title, instructions, durationMin, bestTime, energy, cost, tags }
+***/
+const LIB = {
   am: [
-    {title:"Morning outdoor walk (20–30 min, no podcast)", meta:"Circadian + cortisol timing. Cheap. High stickiness.", cost:"low", tags:["sleep","mood"]},
-    {title:"Sunlight + coffee ritual outside (10–15 min)", meta:"Zero friction. Do it even on bad days.", cost:"low", tags:["sleep","mood"]},
-    {title:"Zone-2 easy cardio (25–35 min)", meta:"Stress buffering + sleep pressure.", cost:"low", tags:["fitness","sleep"]},
-    {title:"Short strength primer (12–18 min)", meta:"2–3 big moves. Identity reinforcement.", cost:"low", tags:["fitness"]},
-    {title:"Physiological sigh breathing (10 min)", meta:"Fast downshift before kids wake.", cost:"low", tags:["stress"]},
-    {title:"Mobility flow (12–20 min)", meta:"Neck/upper back tension relief.", cost:"low", tags:["pain","recovery"]},
+    { id:"am_sun_walk_20", title:"Sunlight walk", instructions:"20 min outside. No podcast. Just light + movement.", durationMin:20, bestTime:"AM", energy:"low", cost:"low", tags:["sleep","mood","fitness"] },
+    { id:"am_sun_coffee_12", title:"Sun + coffee outside", instructions:"Drink coffee outdoors for 8–12 min. Slow. Observe.", durationMin:12, bestTime:"AM", energy:"verylow", cost:"low", tags:["sleep","mood","warmth"] },
+    { id:"am_water_salt_5", title:"Hydrate + electrolytes", instructions:"500ml water + pinch of salt / electrolyte tab. Then start day.", durationMin:5, bestTime:"AM", energy:"verylow", cost:"low", tags:["mood","clarity","recovery"] },
+    { id:"am_breath_box_10", title:"Box breathing", instructions:"10 min: inhale 4, hold 4, exhale 4, hold 4. Nose only.", durationMin:10, bestTime:"AM", energy:"verylow", cost:"low", tags:["stress","clarity"] },
+    { id:"am_phys_sigh_8", title:"Physiological sigh reset", instructions:"5–8 min: double inhale through nose, long exhale. Repeat.", durationMin:8, bestTime:"AM", energy:"verylow", cost:"low", tags:["stress","mood"] },
+    { id:"am_nsdr_15", title:"NSDR (morning)", instructions:"15 min NSDR/Yoga Nidra. Headphones. Eyes covered.", durationMin:15, bestTime:"AM", energy:"verylow", cost:"low", tags:["stress","sleep","recovery"] },
+    { id:"am_mobility_neck_12", title:"Neck + upper back mobility", instructions:"12 min: chin tucks, thoracic openers, traps release.", durationMin:12, bestTime:"AM", energy:"low", cost:"low", tags:["pain","recovery"] },
+    { id:"am_mobility_hips_12", title:"Hips + spine mobility", instructions:"12 min: 90/90s, hip flexor stretch, cat-cow, rotations.", durationMin:12, bestTime:"AM", energy:"low", cost:"low", tags:["pain","fitness","recovery"] },
+    { id:"am_strength_primer_15", title:"Strength primer", instructions:"15 min: 2–3 big moves. Leave reps in reserve.", durationMin:15, bestTime:"AM", energy:"med", cost:"low", tags:["fitness","mood"] },
+    { id:"am_push_pull_squat_18", title:"Push/Pull/Squat micro", instructions:"18 min circuit: push, pull, squat x 3 rounds. Easy.", durationMin:18, bestTime:"AM", energy:"med", cost:"low", tags:["fitness","clarity"] },
+    { id:"am_zone2_25", title:"Zone-2 easy cardio", instructions:"25 min easy pace. You can nose-breathe.", durationMin:25, bestTime:"AM", energy:"med", cost:"low", tags:["fitness","sleep","mood"] },
+    { id:"am_runwalk_20", title:"Run-walk intervals", instructions:"20 min: 1 min jog / 2 min walk. Finish calm.", durationMin:20, bestTime:"AM", energy:"med", cost:"low", tags:["fitness","mood"] },
+    { id:"am_stairs_easy_12", title:"Easy stairs / hill walk", instructions:"12 min steady climb. Not a suffer-fest.", durationMin:12, bestTime:"AM", energy:"med", cost:"low", tags:["fitness","mood"] },
+    { id:"am_nasal_walk_20", title:"Nasal-only walk", instructions:"20 min nasal breathing only. If you can’t, slow down.", durationMin:20, bestTime:"AM", energy:"low", cost:"low", tags:["stress","fitness"] },
+    { id:"am_journal_5", title:"3 wins + 1 focus", instructions:"Write: 3 wins (yesterday) + 1 focus (today). Stop.", durationMin:5, bestTime:"AM", energy:"verylow", cost:"low", tags:["clarity"] },
+    { id:"am_brain_dump_7", title:"Brain dump (short)", instructions:"7 min: dump worries/tasks. Circle top 1. Done.", durationMin:7, bestTime:"AM", energy:"verylow", cost:"low", tags:["clarity","stress"] },
+    { id:"am_music_stretch_12", title:"Music + stretch", instructions:"One song = stretch shoulders; one song = hips. Done.", durationMin:12, bestTime:"AM", energy:"low", cost:"low", tags:["warmth","pain","recovery"] },
+    { id:"am_cold_rinse_2", title:"Cold rinse finisher", instructions:"2 min cold at end of shower. Slow breathing.", durationMin:2, bestTime:"AM", energy:"low", cost:"low", tags:["mood","stress"] },
+    { id:"am_heat_then_cold_8", title:"Contrast shower", instructions:"3 min warm + 1 min cool x2. End cool.", durationMin:8, bestTime:"AM", energy:"low", cost:"low", tags:["mood","recovery"] },
+    { id:"am_green_tea_5", title:"Green tea ritual", instructions:"Tea + sit 5 min. No scrolling. Train calm focus.", durationMin:5, bestTime:"AM", energy:"verylow", cost:"low", tags:["clarity","warmth"] },
+    { id:"am_protein_first_10", title:"Protein-first start", instructions:"Protein shake or eggs + water. Stabilise cravings.", durationMin:10, bestTime:"AM", energy:"verylow", cost:"low", tags:["fitness","mood"] },
+    { id:"am_planned_fun_5", title:"Plan today’s reward", instructions:"Pick a non-alcohol reward for tonight. Write it.", durationMin:5, bestTime:"AM", energy:"verylow", cost:"low", tags:["clarity","mood"] },
+    { id:"am_micro_clean_10", title:"10-min environment reset", instructions:"Reset one zone (kitchen/desk). Stop at 10.", durationMin:10, bestTime:"AM", energy:"low", cost:"low", tags:["clarity","stress"] },
+    { id:"am_walk_photos_20", title:"Photo-walk mission", instructions:"20 min walk. Capture 10 shots of light/texture.", durationMin:20, bestTime:"AM", energy:"low", cost:"low", tags:["play","creativity","mood"] },
+    { id:"am_call_friend_10", title:"Warm voice note", instructions:"Send a 1–2 min voice note to someone you like.", durationMin:10, bestTime:"AM", energy:"verylow", cost:"low", tags:["social","warmth","mood"] }
   ],
+
   pm: [
-    {title:"Evening screen-dim + book (20–30 min)", meta:"Sleep quality & consistency.", cost:"low", tags:["sleep"]},
-    {title:"Hot shower + dim lights + 10 min breathing", meta:"Downshift without sedation.", cost:"low", tags:["stress","sleep"]},
-    {title:"Gentle stretch + body scan (15–25 min)", meta:"Parasympathetic activation; good for headaches.", cost:"low", tags:["stress","pain"]},
-    {title:"Prep tomorrow (10 min) + lights out", meta:"Reduces mental load; supports sleep.", cost:"low", tags:["clarity","sleep"]},
-    {title:"No screens 45 min before bed", meta:"Small change, huge compounding effect.", cost:"low", tags:["sleep"]},
+    { id:"pm_dim_read_25", title:"Dim lights + fiction", instructions:"25 min fiction. Phone outside room. No ‘self-help’.", durationMin:25, bestTime:"PM", energy:"verylow", cost:"low", tags:["sleep","stress"] },
+    { id:"pm_no_screens_45", title:"No screens pre-bed", instructions:"45 min: no phone/TV. Replace with book/stretch.", durationMin:45, bestTime:"PM", energy:"verylow", cost:"low", tags:["sleep"] },
+    { id:"pm_walk_after_dinner_20", title:"Post-dinner walk", instructions:"20 min easy walk. Aim for calm, not steps.", durationMin:20, bestTime:"PM", energy:"low", cost:"low", tags:["sleep","mood","fitness"] },
+    { id:"pm_hot_shower_breath_15", title:"Hot shower + breathing", instructions:"Hot shower, then 10 min slow breathing in dim light.", durationMin:15, bestTime:"PM", energy:"verylow", cost:"low", tags:["stress","sleep","warmth"] },
+    { id:"pm_legs_up_wall_15", title:"Legs-up-the-wall", instructions:"12–15 min. Nasal breathing. Let the day drain out.", durationMin:15, bestTime:"PM", energy:"verylow", cost:"low", tags:["sleep","stress"] },
+    { id:"pm_body_scan_12", title:"Body scan", instructions:"12 min guided body scan. Headphones. Eyes closed.", durationMin:12, bestTime:"PM", energy:"verylow", cost:"low", tags:["stress","sleep"] },
+    { id:"pm_yoga_nidra_20", title:"Yoga Nidra / NSDR", instructions:"20 min. If you’re wired, do this before anything else.", durationMin:20, bestTime:"PM", energy:"verylow", cost:"low", tags:["sleep","stress","recovery"] },
+    { id:"pm_stretch_neck_15", title:"Neck/shoulder unwind", instructions:"15 min: traps, scalenes, pec opener. Slow breathing.", durationMin:15, bestTime:"PM", energy:"verylow", cost:"low", tags:["pain","sleep","recovery"] },
+    { id:"pm_foam_roll_15", title:"Foam roll + stretch", instructions:"15 min light roll + long exhales. No pain chasing.", durationMin:15, bestTime:"PM", energy:"low", cost:"low", tags:["pain","recovery"] },
+    { id:"pm_heat_pack_15", title:"Heat pack on neck", instructions:"15 min heat on neck/upper back. Sit. Breathe slowly.", durationMin:15, bestTime:"PM", energy:"verylow", cost:"low", tags:["pain","warmth","sleep"] },
+    { id:"pm_bath_25", title:"Bath / foot soak", instructions:"20–30 min warm bath or foot soak + calm music.", durationMin:25, bestTime:"PM", energy:"verylow", cost:"mid", tags:["sleep","warmth","stress"] },
+    { id:"pm_kitchen_close_10", title:"Kitchen close ritual", instructions:"10 min tidy. Dim lights. Signal ‘day finished’.", durationMin:10, bestTime:"PM", energy:"low", cost:"low", tags:["clarity","sleep"] },
+    { id:"pm_brain_dump_8", title:"Brain dump (night)", instructions:"8 min write-out. End with 1 ‘tomorrow focus’.", durationMin:8, bestTime:"PM", energy:"verylow", cost:"low", tags:["clarity","stress","sleep"] },
+    { id:"pm_gratitude_5", title:"3 gratitude bullets", instructions:"Write 3 small gratitudes. Not poetic. Just true.", durationMin:5, bestTime:"PM", energy:"verylow", cost:"low", tags:["mood","warmth"] },
+    { id:"pm_music_low_light_20", title:"Low-light music sit", instructions:"20 min sit with music. No multitasking. Just listen.", durationMin:20, bestTime:"PM", energy:"verylow", cost:"low", tags:["warmth","stress","mood"] },
+    { id:"pm_tea_decaf_10", title:"Decaf tea ritual", instructions:"Warm tea + slow sip + 10 pages of a book.", durationMin:10, bestTime:"PM", energy:"verylow", cost:"low", tags:["warmth","sleep"] },
+    { id:"pm_gentle_yoga_20", title:"Gentle yoga flow", instructions:"20 min slow yoga (hips/spine). End with 2 min stillness.", durationMin:20, bestTime:"PM", energy:"low", cost:"low", tags:["sleep","pain","stress"] },
+    { id:"pm_breath_4_6_10", title:"4–6 breathing", instructions:"10 min: inhale 4, exhale 6. If anxious, lengthen exhale.", durationMin:10, bestTime:"PM", energy:"verylow", cost:"low", tags:["stress","sleep"] },
+    { id:"pm_candle_journal_15", title:"Candle journaling", instructions:"15 min journal by candle/lamplight. Phone away.", durationMin:15, bestTime:"PM", energy:"verylow", cost:"low", tags:["clarity","warmth"] },
+    { id:"pm_stretch_kids_noise_10", title:"Stretch with kids chaos", instructions:"10 min mobility even if the house is noisy. Win anyway.", durationMin:10, bestTime:"PM", energy:"low", cost:"low", tags:["fitness","recovery"] },
+    { id:"pm_social_call_15", title:"Short social call", instructions:"15 min call with a friend/family. No complaining. Warmth only.", durationMin:15, bestTime:"PM", energy:"low", cost:"low", tags:["social","warmth","mood"] },
+    { id:"pm_plan_tomorrow_10", title:"Plan tomorrow in 10", instructions:"List 3 tasks. Schedule 1 recovery block. Stop.", durationMin:10, bestTime:"PM", energy:"verylow", cost:"low", tags:["clarity","stress"] },
+    { id:"pm_sleep_stack_10", title:"Sleep stack", instructions:"Room cool + dark + earplugs + phone out. Then breathe 2 min.", durationMin:10, bestTime:"PM", energy:"verylow", cost:"low", tags:["sleep"] },
+    { id:"pm_self_massage_12", title:"Self-massage (DIY)", instructions:"12 min: jaw, temples, neck, shoulders. Gentle pressure.", durationMin:12, bestTime:"PM", energy:"verylow", cost:"low", tags:["pain","recovery","sleep"] },
+    { id:"pm_warm_shower_mood_12", title:"Warm shower + mood reset", instructions:"Shower then 5 min sit in towel. Let nervous system settle.", durationMin:12, bestTime:"PM", energy:"verylow", cost:"low", tags:["warmth","stress"] }
   ],
+
   mid: [
-    {title:"Sauna + cold plunge", meta:"Replace a booze night. Mood + sleep wins.", cost:"mid", tags:["sleep","mood"]},
-    {title:"Ocean/river swim + hot shower", meta:"Clean dopamine + calm.", cost:"low", tags:["mood"]},
-    {title:"Long solo hike to a destination café", meta:"Movement + novelty + reward.", cost:"low", tags:["mood","clarity"]},
-    {title:"Bouldering / climbing session", meta:"Playful progress loop. Addictive.", cost:"mid", tags:["play","fitness"]},
-    {title:"Hard strength session + protein meal", meta:"Earned calm; anxiety drops after heavy work.", cost:"low", tags:["fitness","mood"]},
-    {title:"Sports massage / myotherapy", meta:"High ROI with tension headaches.", cost:"high", tags:["pain","recovery"]},
-    {title:"Float tank", meta:"Deep nervous-system downshift.", cost:"high", tags:["stress","sleep"]},
-    {title:"Evening bike ride (45–75 min)", meta:"Decompression + sleep pressure.", cost:"low", tags:["mood","sleep"]},
-    {title:"Creative solo block (60–90 min)", meta:"Restore identity beyond work/parenting.", cost:"low", tags:["play","clarity"]},
+    { id:"mid_sauna_90", title:"Sauna (early) + hydration", instructions:"60–90 min total. Go earlier (not late night). Rehydrate after.", durationMin:90, bestTime:"Midday", energy:"low", cost:"mid", tags:["sleep","mood","recovery"] },
+    { id:"mid_swim_45", title:"Swim session", instructions:"30–45 min easy swim. Finish warm and calm.", durationMin:45, bestTime:"Midday", energy:"med", cost:"mid", tags:["fitness","sleep","mood"] },
+    { id:"mid_ocean_dip_30", title:"Ocean/river dip + warm drink", instructions:"Short dip + warm drink after. Mood lift without alcohol.", durationMin:30, bestTime:"Midday", energy:"low", cost:"low", tags:["mood","stress","recovery"] },
+    { id:"mid_zone2_60", title:"Zone-2 long walk", instructions:"60 min walk. Nose breathe. Think less. Observe more.", durationMin:60, bestTime:"Midday", energy:"med", cost:"low", tags:["fitness","mood","clarity"] },
+    { id:"mid_hike_cafe_120", title:"Destination hike + café", instructions:"60–120 min: walk/hike to a café. Reward = food + view.", durationMin:120, bestTime:"Midday", energy:"med", cost:"mid", tags:["mood","fitness","warmth"] },
+    { id:"mid_strength_60", title:"Strength session (earned calm)", instructions:"60 min strength. Stop 1–2 reps short. Leave energised.", durationMin:60, bestTime:"Midday", energy:"high", cost:"low", tags:["fitness","mood"] },
+    { id:"mid_strength_sauna_120", title:"Strength + sauna combo", instructions:"Lift 45–60 min + sauna 15–20 min. Hydrate. Done.", durationMin:120, bestTime:"Midday", energy:"high", cost:"mid", tags:["fitness","sleep","recovery"] },
+    { id:"mid_bouldering_90", title:"Bouldering (play + progress)", instructions:"60–90 min. Focus on technique. Leave before fatigue crash.", durationMin:90, bestTime:"Midday", energy:"high", cost:"mid", tags:["play","fitness","mood"] },
+    { id:"mid_yoga_class_60", title:"Yoga class", instructions:"60 min class (or at home). Prioritise slow + breath-led.", durationMin:60, bestTime:"Midday", energy:"low", cost:"mid", tags:["stress","pain","sleep"] },
+    { id:"mid_mobility_plus_walk_60", title:"Mobility + walk", instructions:"20 min mobility + 40 min walk. Tension + mind reset.", durationMin:60, bestTime:"Midday", energy:"med", cost:"low", tags:["pain","stress","fitness"] },
+    { id:"mid_float_60", title:"Float tank", instructions:"Float 60 min. After: 10 min slow walk. No phone.", durationMin:75, bestTime:"Midday", energy:"verylow", cost:"high", tags:["stress","sleep","recovery"] },
+    { id:"mid_massage_60", title:"Massage / myotherapy", instructions:"60 min. Tell them headaches/neck tension is priority.", durationMin:60, bestTime:"Midday", energy:"verylow", cost:"high", tags:["pain","recovery","stress"] },
+    { id:"mid_physio_45", title:"Physio check-in", instructions:"Address root cause. Bring a 2-week headache log if you can.", durationMin:45, bestTime:"Midday", energy:"low", cost:"high", tags:["pain","recovery"] },
+    { id:"mid_creative_play_90", title:"Creative play block", instructions:"90 min making: photo, music, writing, building. No outcomes.", durationMin:90, bestTime:"Midday", energy:"low", cost:"low", tags:["play","creativity","mood"] },
+    { id:"mid_photography_mission_90", title:"Photography mission", instructions:"Pick a theme (light/texture/people). Capture 30 shots.", durationMin:90, bestTime:"Midday", energy:"low", cost:"low", tags:["play","creativity","clarity"] },
+    { id:"mid_library_cafe_90", title:"Library + café focus", instructions:"60–90 min reading + note 3 ideas. Quiet brain fuel.", durationMin:90, bestTime:"Midday", energy:"verylow", cost:"low", tags:["clarity","stress"] },
+    { id:"mid_cinema_matinee_120", title:"Solo cinema (matinee)", instructions:"Movie + phone off. Replace ‘drinks for fun’ with novelty.", durationMin:120, bestTime:"Midday", energy:"verylow", cost:"mid", tags:["play","mood"] },
+    { id:"mid_social_coffee_60", title:"Coffee with a friend", instructions:"60 min. No venting spiral. Share one good thing each.", durationMin:60, bestTime:"Midday", energy:"low", cost:"low", tags:["social","warmth","mood"] },
+    { id:"mid_walk_and_talk_60", title:"Walk-and-talk call", instructions:"Call a friend while walking. Keep it light + warm.", durationMin:60, bestTime:"Midday", energy:"med", cost:"low", tags:["social","fitness","mood"] },
+    { id:"mid_breathwork_class_60", title:"Breathwork session", instructions:"Group or guided breathwork. Do not do late night.", durationMin:60, bestTime:"Midday", energy:"low", cost:"mid", tags:["stress","mood","recovery"] },
+    { id:"mid_cold_plunge_30", title:"Cold plunge session", instructions:"10–20 min total exposure. Finish warm. Slow breathing.", durationMin:30, bestTime:"Midday", energy:"low", cost:"mid", tags:["mood","stress","recovery"] },
+    { id:"mid_park_picnic_90", title:"Solo picnic + book", instructions:"Bring food + book. Sit in nature. No scrolling.", durationMin:90, bestTime:"Midday", energy:"verylow", cost:"low", tags:["warmth","stress","mood"] },
+    { id:"mid_bike_75", title:"Bike ride", instructions:"60–90 min steady ride. End before you’re cooked.", durationMin:75, bestTime:"Midday", energy:"high", cost:"low", tags:["fitness","mood","sleep"] },
+    { id:"mid_gardening_60", title:"Hands-in-dirt reset", instructions:"60 min gardening/yard. Slow, tactile, satisfying.", durationMin:60, bestTime:"Midday", energy:"med", cost:"low", tags:["warmth","stress","clarity"] },
+    { id:"mid_sauna_stretch_75", title:"Sauna + stretch (no phone)", instructions:"Sauna then 20 min stretch. Phone stays away.", durationMin:75, bestTime:"Midday", energy:"low", cost:"mid", tags:["sleep","stress","recovery"] },
+    { id:"mid_runwalk_50", title:"Run-walk 50", instructions:"50 min easy. Keep it conversational. Finish calm.", durationMin:50, bestTime:"Midday", energy:"high", cost:"low", tags:["fitness","mood","sleep"] },
+    { id:"mid_music_cook_75", title:"Music + cook something warm", instructions:"Cook a comforting meal while listening to an album. No rush.", durationMin:75, bestTime:"Midday", energy:"low", cost:"low", tags:["warmth","mood"] },
+    { id:"mid_sauna_social_90", title:"Sauna + friend", instructions:"Sauna with a mate. Social warmth without alcohol.", durationMin:90, bestTime:"Midday", energy:"low", cost:"mid", tags:["social","warmth","recovery"] },
+    { id:"mid_art_gallery_90", title:"Gallery / museum walk", instructions:"Slow walk, notice details, let brain soften.", durationMin:90, bestTime:"Midday", energy:"verylow", cost:"mid", tags:["play","creativity","mood"] },
+    { id:"mid_beach_walk_60", title:"Beach walk", instructions:"60 min along water. Barefoot if possible. No podcasts.", durationMin:60, bestTime:"Midday", energy:"med", cost:"low", tags:["stress","mood","sleep"] },
+    { id:"mid_errand_free_120", title:"Errand-free block", instructions:"2 hours with zero tasks. Choose one restorative thing only.", durationMin:120, bestTime:"Midday", energy:"verylow", cost:"low", tags:["stress","clarity"] }
   ],
+
   deep: [
-    {title:"Home retreat half-day (books, naps, stretch, journal)", meta:"Zero errands. No screens. Real recovery.", cost:"low", tags:["sleep","stress"]},
-    {title:"Big nature day: hike + picnic + sunset", meta:"Perspective reset. Improves sleep pressure.", cost:"low", tags:["mood","sleep"]},
-    {title:"No-input half-day (no news/social/podcasts)", meta:"Silence for an overloaded brain.", cost:"low", tags:["clarity","stress"]},
-    {title:"Coastal drive + swim + long lunch solo", meta:"Holiday feeling without holiday budget.", cost:"mid", tags:["mood"]},
-    {title:"Day spa block (2–5 hrs)", meta:"Hard state-change. Use sparingly but decisively.", cost:"high", tags:["stress","sleep"]},
-    {title:"Float + massage combo", meta:"If you’re cooked, go nuclear.", cost:"high", tags:["stress","pain"]},
-    {title:"Photography walk + edit session", meta:"Creative deep play that feels like freedom.", cost:"low", tags:["play","clarity"]},
+    { id:"deep_home_retreat_240", title:"Home retreat half-day", instructions:"No errands. NSDR + stretch + nap + journaling. Phone away.", durationMin:240, bestTime:"Sunday", energy:"verylow", cost:"low", tags:["stress","sleep","recovery"] },
+    { id:"deep_big_nature_300", title:"Big nature day", instructions:"Long hike + view + slow meal. Bring water + snacks. No rush.", durationMin:300, bestTime:"Sunday", energy:"med", cost:"mid", tags:["mood","sleep","fitness"] },
+    { id:"deep_digital_silence_240", title:"Digital silence half-day", instructions:"No news/social/podcasts. Walk + sit + read. Let brain reset.", durationMin:240, bestTime:"Sunday", energy:"verylow", cost:"low", tags:["clarity","stress","recovery"] },
+    { id:"deep_coast_drive_300", title:"Coast drive + swim + lunch", instructions:"Mini holiday: drive, swim, long lunch. No alcohol.", durationMin:300, bestTime:"Sunday", energy:"low", cost:"mid", tags:["mood","warmth","recovery"] },
+    { id:"deep_day_spa_240", title:"Day spa block", instructions:"2–4 hrs spa/sauna/massage. Use when you’re cooked.", durationMin:240, bestTime:"Sunday", energy:"verylow", cost:"high", tags:["stress","sleep","recovery"] },
+    { id:"deep_float_massage_240", title:"Float + massage combo", instructions:"Float then massage. No phone after. Early night.", durationMin:240, bestTime:"Sunday", energy:"verylow", cost:"high", tags:["stress","pain","sleep"] },
+    { id:"deep_family_outing_lowstress_240", title:"Low-stress family outing", instructions:"Choose one calm outing. You’re present, not performing.", durationMin:240, bestTime:"Sunday", energy:"med", cost:"low", tags:["warmth","mood","social"] },
+    { id:"deep_creative_deep_play_180", title:"Creative deep play", instructions:"3 hours making (music/photo/building). No outcomes. Just flow.", durationMin:180, bestTime:"Sunday", energy:"low", cost:"low", tags:["play","creativity","mood"] },
+    { id:"deep_declutter_one_zone_180", title:"Environment reset", instructions:"Declutter one zone for 2–3 hrs. Stop when timer ends.", durationMin:180, bestTime:"Sunday", energy:"med", cost:"low", tags:["clarity","stress"] },
+    { id:"deep_bike_nature_240", title:"Bike + nature reset", instructions:"2–4 hr ride with café stop. End before fatigue hangover.", durationMin:240, bestTime:"Sunday", energy:"high", cost:"low", tags:["fitness","mood","sleep"] },
+    { id:"deep_long_sauna_session_180", title:"Sauna + long unwind", instructions:"Sauna earlier + stretch + long meal. No late stimulants.", durationMin:180, bestTime:"Sunday", energy:"low", cost:"mid", tags:["sleep","stress","recovery"] },
+    { id:"deep_bookshop_cafe_journal_180", title:"Bookshop + café retreat", instructions:"Wander bookshop, café sit, journal. Phone stays away.", durationMin:180, bestTime:"Sunday", energy:"verylow", cost:"mid", tags:["clarity","warmth"] },
+    { id:"deep_solo_cabin_day_360", title:"Solo cabin-style day (at home)", instructions:"Treat home like cabin: slow meals, books, naps, no screens.", durationMin:360, bestTime:"Sunday", energy:"verylow", cost:"low", tags:["sleep","stress","recovery"] },
+    { id:"deep_music_day_240", title:"Music day", instructions:"Play albums + cook + light walk. Keep it warm + simple.", durationMin:240, bestTime:"Sunday", energy:"verylow", cost:"low", tags:["warmth","mood","recovery"] },
+    { id:"deep_silent_morning_180", title:"Silent morning", instructions:"First 3 hrs: silence. Walk + coffee + journaling. No inputs.", durationMin:180, bestTime:"Sunday", energy:"verylow", cost:"low", tags:["clarity","stress"] }
   ],
+
   anchor: [
-    {title:"Training identity: 3×/week same template", meta:"Pick ONE style. Consistency beats variety.", cost:"low", tags:["fitness"]},
-    {title:"Sleep identity: fixed wake time 6 days/week", meta:"Anchor circadian rhythm; bedtime follows.", cost:"low", tags:["sleep"]},
-    {title:"Recovery identity: sauna/cold OR swim ritual", meta:"Be ‘the person who does this’.", cost:"mid", tags:["sleep","mood"]},
-    {title:"Non-alcoholic reward: premium coffee ritual", meta:"Replace ‘drink = reward’ with cleaner reward.", cost:"low", tags:["mood"]},
-    {title:"Pain-proofing identity: daily mobility 10 min", meta:"Headaches often ride tension + poor recovery.", cost:"low", tags:["pain"]},
-    {title:"Alcohol containment: 2 days/week, never consecutive", meta:"Containment beats vague ‘cutting back’.", cost:"low", tags:["sleep","mood"]},
-    {title:"Focus identity: deep-work after AM ritual", meta:"Recovery fuels output; make it visible.", cost:"low", tags:["clarity"]},
+    { id:"anchor_alcohol_2days_10", title:"Alcohol containment rule", instructions:"Max 2 days/week. Never consecutive. Never with sleep debt.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["sleep","mood","clarity"] },
+    { id:"anchor_am_nonneg_10", title:"AM ritual non-negotiable", instructions:"AM ritual daily. Miss it → no alcohol that day.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["clarity","sleep"] },
+    { id:"anchor_caffeine_cutoff_10", title:"Caffeine cutoff", instructions:"No caffeine after 10am. Protect sleep architecture.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["sleep","clarity"] },
+    { id:"anchor_phone_out_10", title:"Phone out of bedroom", instructions:"Charge phone outside bedroom. Buy attention + sleep back.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["sleep","stress"] },
+    { id:"anchor_training_template_15", title:"Training template commitment", instructions:"Pick 3 sessions/week. Same template for 4 weeks.", durationMin:15, bestTime:"Mon", energy:"low", cost:"low", tags:["fitness","clarity"] },
+    { id:"anchor_mobility_daily_10", title:"Daily mobility 10", instructions:"10 min mobility before first screen. Treat pain upstream.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["pain","recovery"] },
+    { id:"anchor_two_recharge_blocks_10", title:"Book 2 recharge blocks", instructions:"Schedule 2 midweek recharges first. Work fills the gaps.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["clarity","stress"] },
+    { id:"anchor_reward_swap_10", title:"Reward replacement", instructions:"Choose 2 non-alcohol rewards this week (spa/sauna/food/music).", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["mood","warmth"] },
+    { id:"anchor_sleep_wake_time_10", title:"Fixed wake time", instructions:"6 days/week fixed wake time. Bedtime follows naturally.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["sleep"] },
+    { id:"anchor_social_warmth_10", title:"Social warmth rule", instructions:"One warm connection this week (call/walk). No booze required.", durationMin:10, bestTime:"Mon", energy:"verylow", cost:"low", tags:["social","warmth","mood"] }
   ],
+
   panic: [
-    {title:"10 min walk outside + water + salty snack", meta:"Stabilize physiology. Stop the spiral.", cost:"low"},
-    {title:"Hot shower + lights dim + 10 min breathing", meta:"Downshift without needing meds.", cost:"low"},
-    {title:"15 min mobility for neck/upper back", meta:"Often reduces tension headache intensity.", cost:"low"},
-    {title:"Early bed: phone out of room + earplugs", meta:"Pay sleep debt; everything gets easier.", cost:"low"},
+    { id:"panic_walk_water_10", title:"10-min walk + water", instructions:"Go outside. 10 min walk. 500ml water. No thinking.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress","recovery"] },
+    { id:"panic_nsdr_15", title:"NSDR / Yoga Nidra", instructions:"15 min NSDR audio. Eyes covered. Phone face down.", durationMin:15, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress","sleep","recovery"] },
+    { id:"panic_breath_8", title:"Breath downshift", instructions:"8 min: inhale 4, exhale 6. Count breaths. That’s it.", durationMin:8, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress"] },
+    { id:"panic_hot_shower_12", title:"Hot shower reset", instructions:"Hot shower + sit quietly 2 min after. No phone.", durationMin:12, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress","warmth"] },
+    { id:"panic_legs_up_12", title:"Legs up wall", instructions:"12 min legs-up-wall. Long exhales. Let the system soften.", durationMin:12, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress","sleep"] },
+    { id:"panic_stretch_neck_10", title:"Neck tension release", instructions:"10 min: chin tucks + traps stretch + slow breathing.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["pain","recovery"] },
+    { id:"panic_snack_protein_10", title:"Protein snack + water", instructions:"Eat a protein snack + water. Stabilise mood/irritability.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["mood","recovery"] },
+    { id:"panic_5min_tidying_5", title:"5-min tidy sprint", instructions:"Set timer 5. Clear one surface. Stop. Win momentum.", durationMin:5, bestTime:"Any", energy:"verylow", cost:"low", tags:["clarity","stress"] },
+    { id:"panic_text_friend_5", title:"Send a warm message", instructions:"Send a short warm text/voice note. Connection reduces vigilance.", durationMin:5, bestTime:"Any", energy:"verylow", cost:"low", tags:["social","warmth","mood"] },
+    { id:"panic_outside_sit_10", title:"Outside sit", instructions:"Sit outside 10 min. No phone. Just breathe and look.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["stress","recovery"] },
+    { id:"panic_early_bed_15", title:"Early bed protocol", instructions:"Phone out. Dark room. Earplugs. Lights out now.", durationMin:15, bestTime:"Any", energy:"verylow", cost:"low", tags:["sleep"] },
+    { id:"panic_music_10", title:"One-song reset", instructions:"Play 2–3 calming songs. Sit still. Breathe slowly.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["warmth","stress"] }
   ]
 };
 
-// ---------- Helpers ----------
-function xmur3(str){
-  let h = 1779033703 ^ str.length;
-  for (let i=0; i<str.length; i++){
-    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  return function(){
-    h = Math.imul(h ^ (h >>> 16), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    return (h ^= (h >>> 16)) >>> 0;
-  }
-}
-function mulberry32(a){
-  return function(){
-    let t = a += 0x6D2B79F5;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  }
-}
-function getISOWeek(d){
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
-  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  return { year: date.getUTCFullYear(), week: weekNo };
-}
-function weekSeed(){
-  const now = new Date();
-  const w = getISOWeek(now);
-  return `${w.year}-W${String(w.week).padStart(2,'0')}`;
-}
-function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (m)=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-function pad2(n){ return String(n).padStart(2,'0'); }
-
-// ---------- State ----------
+/*** 2) State + persistence ***/
+const STORAGE_KEY = "srp:v3";
 const els = {
-  weekLabel: document.getElementById("weekLabel"),
+  startLabel: document.getElementById("startLabel"),
   seedLabel: document.getElementById("seedLabel"),
-  tzLabel: document.getElementById("tzLabel"),
-  weekStartLabel: document.getElementById("weekStartLabel"),
+  planGrid: document.getElementById("planGrid"),
+  planFootnote: document.getElementById("planFootnote"),
+  toast: document.getElementById("toast"),
+  inlineError: document.getElementById("inlineError"),
 
+  ctaBtn: document.getElementById("ctaBtn"),
   generateBtn: document.getElementById("generateBtn"),
   exportBtn: document.getElementById("exportBtn"),
   copyBtn: document.getElementById("copyBtn"),
-  newSeedBtn: document.getElementById("newSeedBtn"),
-  resetBtn: document.getElementById("resetBtn"),
+  copyImportBtn: document.getElementById("copyImportBtn"),
 
-  preferLowCost: document.getElementById("preferLowCost"),
-  includePlay: document.getElementById("includePlay"),
-  lockRules: document.getElementById("lockRules"),
-
+  startDate: document.getElementById("startDate"),
   midCount: document.getElementById("midCount"),
   variety: document.getElementById("variety"),
+  preferLowCost: document.getElementById("preferLowCost"),
+  includePlay: document.getElementById("includePlay"),
 
   amTime: document.getElementById("amTime"),
   pmTime: document.getElementById("pmTime"),
   midTime: document.getElementById("midTime"),
   deepTime: document.getElementById("deepTime"),
 
-  planGrid: document.getElementById("planGrid"),
-  rulesBox: document.getElementById("rulesBox"),
-  toast: document.getElementById("toast"),
-
-  panicBtn: document.getElementById("panicBtn"),
-  copyPanicBtn: document.getElementById("copyPanicBtn"),
-  panicOut: document.getElementById("panicOut"),
+  shuffleSeedBtn: document.getElementById("shuffleSeedBtn"),
+  resetBtn: document.getElementById("resetBtn"),
 };
 
 const state = {
-  seed: weekSeed(),
-  rng: null,
-  plan: {
-    // AM/PM are single ritual picks repeated daily (low friction)
-    am: null,
-    pm: null,
-    // mid events: array length = midCount
-    mid: [],
-    deep: null,
-    anchor: null,
-  },
-  panic: null,
+  startDateStr: "",   // YYYY-MM-DD (Sunday)
+  seed: "",           // derived from startDateStr unless shuffled
+  plan: null,         // generated plan object
 };
 
-function init(){
-  setSeed(state.seed);
-  hydrateMeta();
-
-  // Defaults already set in HTML: midCount=3, variety=med, lockRules=true, includePlay=true.
-  renderRules();
-  renderPlan();
-
-  els.generateBtn.onclick = generateFullWeek;
-  els.exportBtn.onclick = exportICS;
-  els.copyBtn.onclick = copyPlanText;
-  els.newSeedBtn.onclick = newSeed;
-  els.resetBtn.onclick = resetPlan;
-
-  els.preferLowCost.onchange = () => toast("Preference saved.");
-  els.includePlay.onchange = () => toast("Preference saved.");
-  els.lockRules.onchange = () => { renderRules(); toast("Rules updated."); };
-
-  els.midCount.onchange = () => { renderPlan(); toast("Mid-week count updated."); };
-  els.variety.onchange = () => toast("Variety updated.");
-
-  els.panicBtn.onclick = panicPick;
-  els.copyPanicBtn.onclick = copyPanicPick;
+/*** 3) Date helpers (NEXT SUNDAY default) ***/
+function pad2(n){ return String(n).padStart(2,"0"); }
+function dateToYYYYMMDD(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function parseYYYYMMDD(s){
+  const [y,m,dd]=s.split("-").map(x=>parseInt(x,10));
+  return new Date(y,(m||1)-1,dd||1,0,0,0,0);
+}
+function nextSunday(from){
+  const d=new Date(from); d.setHours(0,0,0,0);
+  const day=d.getDay(); // Sun=0
+  const delta=(7-day)%7; // 0 if Sunday
+  d.setDate(d.getDate()+delta);
+  return d;
+}
+function formatStartLabel(d){
+  return d.toLocaleDateString(undefined,{weekday:"short",year:"numeric",month:"short",day:"numeric"});
+}
+function todayLocal(){
+  const d=new Date(); d.setHours(0,0,0,0); return d;
 }
 
-function hydrateMeta(){
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "local";
-  els.tzLabel.textContent = tz;
-
-  // We'll treat week start as Monday (ISO). Show date.
-  const {start} = getWeekBounds(new Date());
-  els.weekStartLabel.textContent = start.toLocaleDateString(undefined, { weekday:"short", year:"numeric", month:"short", day:"numeric" });
-}
-
-function setSeed(seed){
-  state.seed = seed;
-  els.weekLabel.textContent = seed;
-  els.seedLabel.textContent = seed;
-
-  const seedFn = xmur3(seed);
-  state.rng = mulberry32(seedFn());
-}
-
-function newSeed(){
-  const stamp = Date.now().toString(36).slice(-4);
-  setSeed(`${weekSeed()}-${stamp}`);
-  toast("Shuffled. Generate again.");
-}
-
-function resetPlan(){
-  state.plan = { am:null, pm:null, mid:[], deep:null, anchor:null };
-  state.panic = null;
-  els.panicOut.textContent = "";
-  renderPlan();
-  toast("Reset.");
-}
-
-// ---------- Selection logic ----------
-function getList(mode){
-  let list = MENUS[mode].slice();
-
-  if (!els.includePlay.checked){
-    list = list.filter(it => !((it.tags || []).includes("play")));
+/*** 4) RNG + deterministic UID base ***/
+function xmur3(str){
+  let h = 1779033703 ^ str.length;
+  for (let i=0;i<str.length;i++){
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h<<13) | (h>>>19);
   }
-  return list;
-}
-
-function weightFor(item){
-  const variety = els.variety.value; // low/med/high
-  const preferLow = els.preferLowCost.checked;
-
-  let wCost = 1;
-  if (preferLow){
-    if (item.cost === "low") wCost = 4;
-    else if (item.cost === "mid") wCost = 2;
-    else wCost = 1;
-  } else {
-    wCost = 2;
+  return function(){
+    h = Math.imul(h ^ (h>>>16), 2246822507);
+    h = Math.imul(h ^ (h>>>13), 3266489909);
+    return (h ^= (h>>>16)) >>> 0;
   }
-
-  const tags = item.tags || [];
-  const isBasic = tags.includes("sleep") || tags.includes("fitness") || tags.includes("stress") || tags.includes("pain");
-  const isNovel = tags.includes("play") || tags.includes("clarity") || tags.includes("mood");
-
-  let wVar = 1;
-  if (variety === "low") wVar = isBasic ? 3 : 1;
-  else if (variety === "med") wVar = 2;
-  else wVar = isNovel ? 3 : 1;
-
-  return wCost * wVar;
 }
-
-function pickOne(mode, excludeTitles = new Set()){
-  const list = getList(mode).filter(it => !excludeTitles.has(it.title));
-  if (!list.length) return null;
-
-  const weights = list.map(weightFor);
-  const total = weights.reduce((a,b)=>a+b,0);
-  let r = state.rng() * total;
-  for (let i=0;i<list.length;i++){
-    r -= weights[i];
-    if (r <= 0) return list[i];
+function mulberry32(a){
+  return function(){
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t>>>15), t | 1);
+    t ^= t + Math.imul(t ^ (t>>>7), t | 61);
+    return ((t ^ (t>>>14)) >>> 0) / 4294967296;
   }
-  return list[list.length-1];
+}
+function hashToUidBase(s){
+  const h = xmur3(s)();
+  return `srp-${h.toString(16)}`;
 }
 
-function generateFullWeek(){
-  state.plan.am = pickOne("am") || null;
-  state.plan.pm = pickOne("pm") || null;
+/*** 5) Validation / guardrails ***/
+function setError(msg){
+  els.inlineError.textContent = msg;
+  els.inlineError.style.display = msg ? "block" : "none";
+}
+function isValidTimeStr(t){
+  return typeof t==="string" && /^\d{2}:\d{2}$/.test(t);
+}
+function validateInputs(){
+  setError("");
+  if (!els.startDate.value) return setError("Start date is missing."), false;
+  if (!isValidTimeStr(els.amTime.value) || !isValidTimeStr(els.pmTime.value) ||
+      !isValidTimeStr(els.midTime.value) || !isValidTimeStr(els.deepTime.value)){
+    return setError("One or more time fields are invalid."), false;
+  }
+  // Guardrail: start date should not be in the past
+  const start = parseYYYYMMDD(els.startDate.value);
+  if (start < todayLocal()){
+    return setError("Start date is in the past. Pick the next Sunday."), false;
+  }
+  return true;
+}
 
-  const midCount = parseInt(els.midCount.value, 10);
-  state.plan.mid = [];
-  const used = new Set();
-  for (let i=0;i<midCount;i++){
-    const it = pickOne("mid", used) || pickOne("mid");
-    if (it){
-      state.plan.mid.push(it);
-      used.add(it.title);
+/*** 6) Plan model (slots) ***/
+function emptyPlan(){
+  return {
+    startDateStr: state.startDateStr,
+    seed: state.seed,
+    slots: {
+      am: null,
+      pm: null,
+      deep: null,
+      anchor: null,
+      mid: [], // length midCount
     }
-  }
-
-  state.plan.deep = pickOne("deep") || null;
-  state.plan.anchor = pickOne("anchor") || null;
-
-  renderPlan();
-  toast("Week generated. Export it.");
+  };
 }
 
-// Swap NOW: replace a specific item in-place, same category.
-function swapNow(category, index=null){
+/*** 7) Selection logic (placeholder; we expand next message) ***/
+function pickOne(rng, pool, usedIds){
+  const candidates = pool.filter(a => !usedIds.has(a.id));
+  const list = candidates.length ? candidates : pool;
+  const idx = Math.floor(rng() * list.length);
+  return list[idx];
+}
+
+function generatePlan(){
+  const rng = mulberry32(xmur3(state.seed)());
+  const used = new Set();
+
+  const plan = emptyPlan();
+
+  plan.slots.am = pickOne(rng, LIB.am, used); used.add(plan.slots.am.id);
+  plan.slots.pm = pickOne(rng, LIB.pm, used); used.add(plan.slots.pm.id);
+  plan.slots.deep = pickOne(rng, LIB.deep, used); used.add(plan.slots.deep.id);
+  plan.slots.anchor = pickOne(rng, LIB.anchor, used); used.add(plan.slots.anchor.id);
+
+  const midCount = parseInt(els.midCount.value,10);
+  plan.slots.mid = [];
+  for (let i=0;i<midCount;i++){
+    const it = pickOne(rng, LIB.mid, used);
+    plan.slots.mid.push(it);
+    used.add(it.id);
+  }
+
+  state.plan = plan;
+  persist();
+  renderPlan();
+  toast("Plan generated.");
+}
+
+/*** 8) Swap & Panic swap (same category, avoid repeats) ***/
+function swapSlot(category, index=null, mode="swap"){
+  if (!state.plan) generatePlan();
+
+  const used = new Set();
+  const slots = state.plan.slots;
+
+  // Build used set from all current activities to prevent repeats
+  [slots.am, slots.pm, slots.deep, slots.anchor, ...slots.mid].forEach(x => x && used.add(x.id));
+
+  const rng = mulberry32(xmur3(state.seed + ":" + Date.now().toString(36))()); // quick non-deterministic for swaps
+
+  const pool = (mode==="panic") ? LIB.panic : LIB[category];
+  const replacement = pickOne(rng, pool, used);
+
   if (category === "mid"){
-    const used = new Set(state.plan.mid.map(x=>x.title));
-    const it = pickOne("mid", used) || pickOne("mid");
-    if (!it) return;
-    state.plan.mid[index] = it;
-    toast(`Swapped Mid-Week #${index+1}.`);
+    slots.mid[index] = replacement;
   } else {
-    const currentTitle = state.plan[category]?.title;
-    const exclude = new Set(currentTitle ? [currentTitle] : []);
-    const it = pickOne(category, exclude) || pickOne(category);
-    if (!it) return;
-    state.plan[category] = it;
-    toast(`Swapped ${category.toUpperCase()}.`);
+    slots[category] = replacement;
   }
+
+  persist();
   renderPlan();
+  toast(mode==="panic" ? "Panic swap applied." : "Swapped.");
 }
 
-// ---------- Rendering ----------
-function renderRules(){
-  const locked = els.lockRules.checked;
-  const lines = [];
-  lines.push(`<strong>Rules (90 days):</strong>`);
-  if (locked){
-    lines.push(`• Miss AM ritual ⇒ <strong>no alcohol that day</strong>.`);
-    lines.push(`• Swap recovery for drinking ⇒ <strong>still do (and pay for)</strong> the recovery block.`);
-    lines.push(`• Containment: <strong>max 2 drinking days/week</strong>, <strong>never consecutive</strong>.`);
-  } else {
-    lines.push(`• Suggested: max 2 drinking days/week; never consecutive.`);
-    lines.push(`• Suggested: miss AM ritual ⇒ no alcohol that day.`);
-  }
-  lines.push(`• Your job is execution, not negotiation.`);
-  els.rulesBox.innerHTML = lines.join("<br>");
-}
+window.__swapSlot = swapSlot;
 
-function renderCard(tagClass, label, item, onSwap, costOverride=null){
-  const costLabel = costOverride || (item ? (item.cost === "low" ? "Low cost" : item.cost === "mid" ? "Mid cost" : "Higher cost") : "—");
-  const title = item ? item.title : "Not set";
-  const meta = item ? item.meta : "Generate the week first.";
+/*** 9) Rendering ***/
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m]));
+}
+function badgeFor(a){
+  if (!a) return "—";
+  return `${a.durationMin} min · ${a.energy} energy`;
+}
+function renderCard(tagClass, label, slotKey, activity, swapJs, panicJs){
+  const title = activity ? activity.title : "Not set";
+  const meta = activity ? `${activity.instructions}` : "Generate the week first.";
   return `
     <div class="item">
       <div class="itemTop">
         <span class="tag ${tagClass}">${escapeHtml(label)}</span>
-        <span class="badge">${escapeHtml(costLabel)}</span>
+        <span class="badge">${escapeHtml(badgeFor(activity))}</span>
       </div>
       <p class="title">${escapeHtml(title)}</p>
       <p class="meta">${escapeHtml(meta)}</p>
-      <div class="miniActions">
-        <button class="ghost" onclick="${onSwap}">Swap Now</button>
+      <div class="actions">
+        <button class="mini ghost" onclick="${swapJs}">Swap Now</button>
+        <button class="mini bad" onclick="${panicJs}">Panic Swap</button>
       </div>
     </div>
   `;
 }
-
 function renderPlan(){
+  const p = state.plan;
   const parts = [];
-
-  parts.push(renderCard("am", "AM Ritual (Daily)", state.plan.am, "swapNow('am')"));
-  parts.push(renderCard("pm", "PM Ritual (Daily)", state.plan.pm, "swapNow('pm')"));
-
-  for (let i=0;i<parseInt(els.midCount.value,10);i++){
-    const it = state.plan.mid[i] || null;
-    parts.push(renderCard("mid", `Mid-Week Event #${i+1}`, it, `swapNow('mid',${i})`));
+  if (!p){
+    els.planGrid.innerHTML = renderCard("am","AM Ritual (Daily)","am",null,"generatePlan()","generatePlan()");
+    els.planFootnote.textContent = "No plan yet. Tap “Generate + Export”.";
+    return;
   }
 
-  parts.push(renderCard("deep", "Deep Reset (Weekly)", state.plan.deep, "swapNow('deep')"));
-  parts.push(renderCard("anchor", "Identity Anchor (Weekly)", state.plan.anchor, "swapNow('anchor')"));
+  parts.push(renderCard("am","AM Ritual (Daily)","am",p.slots.am, "__swapSlot('am')", "__swapSlot('am',null,'panic')"));
+  parts.push(renderCard("pm","PM Ritual (Daily)","pm",p.slots.pm, "__swapSlot('pm')", "__swapSlot('pm',null,'panic')"));
+
+  for (let i=0;i<p.slots.mid.length;i++){
+    parts.push(renderCard("mid",`Mid-Week #${i+1}`,"mid",p.slots.mid[i], `__swapSlot('mid',${i})`, `__swapSlot('mid',${i},'panic')`));
+  }
+
+  parts.push(renderCard("deep","Deep Reset (Sunday)","deep",p.slots.deep, "__swapSlot('deep')", "__swapSlot('deep',null,'panic')"));
+  parts.push(renderCard("anchor","Identity Anchor (Mon)","anchor",p.slots.anchor, "__swapSlot('anchor')", "__swapSlot('anchor',null,'panic')"));
 
   els.planGrid.innerHTML = parts.join("");
+  els.planFootnote.textContent = `Start: ${state.startDateStr} · Seed: ${state.seed} · Export reflects the current plan (including swaps).`;
 }
 
-// expose swapNow globally for inline onclick
-window.swapNow = swapNow;
-
-// ---------- Panic ----------
-function panicPick(){
-  const it = MENUS.panic[Math.floor(state.rng() * MENUS.panic.length)];
-  state.panic = it;
-  els.panicOut.textContent = `Panic pick: ${it.title} — ${it.meta}`;
-  toast("Panic pick generated.");
+/*** 10) ICS export (TZID Australia/Perth + deterministic UIDs) ***/
+function parseTimeToDate(baseDate, hhmm){
+  const [hh,mm]=hhmm.split(":").map(x=>parseInt(x,10));
+  const d=new Date(baseDate); d.setHours(hh||0,mm||0,0,0); return d;
 }
-async function copyPanicPick(){
-  if (!state.panic){ panicPick(); }
-  const text = `PANIC PICK: ${state.panic.title}\n${state.panic.meta}`;
-  await copyToClipboard(text);
-  toast("Panic pick copied.");
-}
-
-// ---------- Copy Plan Text ----------
-async function copyPlanText(){
-  const {start, end} = getWeekBounds(new Date());
-  const midCount = parseInt(els.midCount.value,10);
-  const lines = [];
-  lines.push(`SUNDAY RECOVERY PLAN — ${state.seed}`);
-  lines.push(`${start.toDateString()} → ${end.toDateString()}`);
-  lines.push("");
-  lines.push(`AM Ritual (daily): ${state.plan.am ? state.plan.am.title : "NOT SET"}`);
-  lines.push(`PM Ritual (daily): ${state.plan.pm ? state.plan.pm.title : "NOT SET"}`);
-  lines.push("");
-  for (let i=0;i<midCount;i++){
-    lines.push(`Mid-Week #${i+1}: ${state.plan.mid[i] ? state.plan.mid[i].title : "NOT SET"}`);
-  }
-  lines.push("");
-  lines.push(`Deep Reset: ${state.plan.deep ? state.plan.deep.title : "NOT SET"}`);
-  lines.push(`Identity Anchor: ${state.plan.anchor ? state.plan.anchor.title : "NOT SET"}`);
-  lines.push("");
-  lines.push(`Times: AM ${els.amTime.value}, PM ${els.pmTime.value}, Mid ${els.midTime.value}, Deep ${els.deepTime.value}`);
-  lines.push("");
-  lines.push("Rules:");
-  if (els.lockRules.checked){
-    lines.push("- Miss AM ritual => no alcohol that day");
-    lines.push("- Swap recovery for drinking => still do (and pay for) recovery block");
-    lines.push("- Max 2 drinking days/week; never consecutive");
-  } else {
-    lines.push("- Suggested: Max 2 drinking days/week; never consecutive");
-  }
-
-  await copyToClipboard(lines.join("\n"));
-  toast("Copied. Paste into Notes/Calendar.");
-}
-
-async function copyToClipboard(text){
-  try{
-    await navigator.clipboard.writeText(text);
-  } catch(e){
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-  }
-}
-
-// ---------- Calendar Export (.ics) ----------
-function getWeekBounds(now){
-  // ISO week: Monday start
-  const d = new Date(now);
-  const day = (d.getDay() + 6) % 7; // Monday=0
-  const start = new Date(d);
-  start.setDate(d.getDate() - day);
-  start.setHours(0,0,0,0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23,59,59,999);
-  return {start, end};
-}
-
-function toICSDateTimeLocal(date){
-  // Floating local time: YYYYMMDDTHHMMSS (no Z). Google Calendar will interpret in your timezone.
+function toICSLocal(date){ // local wall time
   return `${date.getFullYear()}${pad2(date.getMonth()+1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
 }
-
-function buildEvent(summary, startDate, minutes, description){
-  const dtStart = toICSDateTimeLocal(startDate);
-  const dtEndDate = new Date(startDate.getTime() + minutes*60000);
-  const dtEnd = toICSDateTimeLocal(dtEndDate);
-  const uid = `${Math.random().toString(36).slice(2)}-${Date.now()}@recovery-planner`;
+function escapeICS(s){
+  return String(s).replace(/\\/g,"\\\\").replace(/\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+}
+function icsEvent({uid, summary, description, start, end}){
   return [
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${toICSDateTimeLocal(new Date())}`,
-    `DTSTART:${dtStart}`,
-    `DTEND:${dtEnd}`,
+    `DTSTAMP:${toICSLocal(new Date())}`,
+    `DTSTART;TZID=Australia/Perth:${toICSLocal(start)}`,
+    `DTEND;TZID=Australia/Perth:${toICSLocal(end)}`,
     `SUMMARY:${escapeICS(summary)}`,
-    `DESCRIPTION:${escapeICS(description || "")}`,
+    `DESCRIPTION:${escapeICS(description)}`,
     "END:VEVENT"
   ].join("\r\n");
 }
 
-function escapeICS(s){
-  return String(s)
-    .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
-    .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
-}
-
-function parseTimeToDate(baseDate, hhmm){
-  const [hh, mm] = hhmm.split(":").map(x=>parseInt(x,10));
-  const d = new Date(baseDate);
-  d.setHours(hh||0, mm||0, 0, 0);
-  return d;
+// Minimal VTIMEZONE for Australia/Perth (no DST)
+function perthVTimeZone(){
+  return [
+    "BEGIN:VTIMEZONE",
+    "TZID:Australia/Perth",
+    "X-LIC-LOCATION:Australia/Perth",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0800",
+    "TZOFFSETTO:+0800",
+    "TZNAME:AWST",
+    "DTSTART:19700101T000000",
+    "END:STANDARD",
+    "END:VTIMEZONE"
+  ].join("\r\n");
 }
 
 function exportICS(){
-  // Require generated plan
-  if (!state.plan.am || !state.plan.pm || !state.plan.deep || !state.plan.anchor || !state.plan.mid.length){
-    toast("Generate the week first.");
+  if (!validateInputs()) return;
+
+  // Ensure plan exists
+  if (!state.plan) generatePlan();
+
+  const start = parseYYYYMMDD(state.startDateStr); // Sunday start
+  const now = new Date();
+
+  // Guardrail: don’t export events in the past relative to now
+  if (start < todayLocal()){
+    setError("Start date is in the past. Pick the next Sunday.");
     return;
   }
 
-  const {start} = getWeekBounds(new Date());
+  const uidBase = hashToUidBase(state.startDateStr + "|" + state.seed);
+
+  const amTime = els.amTime.value, pmTime = els.pmTime.value, midTime = els.midTime.value, deepTime = els.deepTime.value;
   const midCount = parseInt(els.midCount.value,10);
 
-  const amMinutes = 25;   // default block length
-  const pmMinutes = 25;
-  const midMinutes = 90;
-  const deepMinutes = 240;
-  const anchorMinutes = 15;
-
-  const amTime = els.amTime.value || "06:30";
-  const pmTime = els.pmTime.value || "20:30";
-  const midTime = els.midTime.value || "12:30";
-  const deepTime = els.deepTime.value || "10:00";
-  const deepDayOffset = 6; // Sunday by default
-  const anchorDayOffset = 0; // Monday by default
-
-  // Place 3 mid-week events on Tue/Thu/Sat by default (or adapt if midCount changes)
-  const preferredMidOffsets = [1, 3, 5, 2, 4, 6]; // Tue, Thu, Sat, Wed, Fri, Sun...
-  const midOffsets = preferredMidOffsets.slice(0, midCount);
+  // Default placement in a Sunday-start week: Tue/Thu/Sat = offsets 2,4,6
+  const preferredMidOffsets = [2,4,6,3,5,1,0].slice(0, midCount);
 
   const events = [];
 
-  // AM/PM daily events Mon-Sun
-  for (let i=0;i<7;i++){
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + i);
+  // Daily AM/PM (Sun..Sat)
+  for (let day=0; day<7; day++){
+    const date = new Date(start); date.setDate(start.getDate()+day);
 
-    const amStart = parseTimeToDate(dayDate, amTime);
-    const pmStart = parseTimeToDate(dayDate, pmTime);
+    const amStart = parseTimeToDate(date, amTime);
+    const pmStart = parseTimeToDate(date, pmTime);
 
-    events.push(buildEvent(
-      `AM Ritual — ${state.plan.am.title}`,
-      amStart,
-      amMinutes,
-      state.plan.am.meta + "\\n\\nIf you can’t do it: hit Swap Now in the planner."
-    ));
+    const am = state.plan.slots.am;
+    const pm = state.plan.slots.pm;
 
-    events.push(buildEvent(
-      `PM Ritual — ${state.plan.pm.title}`,
-      pmStart,
-      pmMinutes,
-      state.plan.pm.meta + "\\n\\nIf you can’t do it: hit Swap Now in the planner."
-    ));
+    events.push(icsEvent({
+      uid: `${uidBase}-am-${day}`,
+      summary: `AM Ritual — ${am.title}`,
+      description: `${am.instructions}\nDuration: ${am.durationMin} min\nIntent: state mastery without cognitive tax.`,
+      start: amStart,
+      end: new Date(amStart.getTime() + am.durationMin*60000),
+    }));
+
+    events.push(icsEvent({
+      uid: `${uidBase}-pm-${day}`,
+      summary: `PM Ritual — ${pm.title}`,
+      description: `${pm.instructions}\nDuration: ${pm.durationMin} min\nIntent: downshift without alcohol.`,
+      start: pmStart,
+      end: new Date(pmStart.getTime() + pm.durationMin*60000),
+    }));
   }
 
-  // Mid-week events
+  // Mid-week
   for (let i=0;i<midCount;i++){
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + midOffsets[i]);
-    const midStart = parseTimeToDate(dayDate, midTime);
+    const date = new Date(start); date.setDate(start.getDate() + preferredMidOffsets[i]);
+    const s = parseTimeToDate(date, midTime);
+    const it = state.plan.slots.mid[i];
 
-    const it = state.plan.mid[i] || {title:"(not set)", meta:""};
-    events.push(buildEvent(
-      `Recharge — ${it.title}`,
-      midStart,
-      midMinutes,
-      it.meta + "\\n\\nRule: if you drink instead, you still do this block."
-    ));
+    events.push(icsEvent({
+      uid: `${uidBase}-mid-${i}`,
+      summary: `Recharge — ${it.title}`,
+      description: `${it.instructions}\nDuration: ${it.durationMin} min\nIntent: warmth + relief without sleep disruption.`,
+      start: s,
+      end: new Date(s.getTime() + it.durationMin*60000),
+    }));
   }
 
-  // Deep reset on Sunday (default)
+  // Deep reset on start Sunday (day 0)
   {
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + deepDayOffset);
-    const deepStart = parseTimeToDate(dayDate, deepTime);
-
-    events.push(buildEvent(
-      `Deep Reset — ${state.plan.deep.title}`,
-      deepStart,
-      deepMinutes,
-      state.plan.deep.meta + "\\n\\nNo alcohol night before or after."
-    ));
+    const it = state.plan.slots.deep;
+    const s = parseTimeToDate(start, deepTime);
+    events.push(icsEvent({
+      uid: `${uidBase}-deep-0`,
+      summary: `Deep Reset — ${it.title}`,
+      description: `${it.instructions}\nDuration: ${it.durationMin} min\nIntent: reset baseline; avoid next-day cognitive tax.`,
+      start: s,
+      end: new Date(s.getTime() + it.durationMin*60000),
+    }));
   }
 
-  // Anchor on Monday (default) as a short reminder
+  // Anchor on Monday (day 1) at 09:00
   {
-    const dayDate = new Date(start);
-    dayDate.setDate(start.getDate() + anchorDayOffset);
-    const anchorStart = parseTimeToDate(dayDate, "09:00");
-
-    events.push(buildEvent(
-      `Identity Anchor — ${state.plan.anchor.title}`,
-      anchorStart,
-      anchorMinutes,
-      state.plan.anchor.meta
-    ));
+    const it = state.plan.slots.anchor;
+    const mon = new Date(start); mon.setDate(start.getDate()+1);
+    const s = parseTimeToDate(mon, "09:00");
+    events.push(icsEvent({
+      uid: `${uidBase}-anchor-1`,
+      summary: `Identity Anchor — ${it.title}`,
+      description: `${it.instructions}\nDuration: ${it.durationMin} min\nIntent: keep the week founder-stable.`,
+      start: s,
+      end: new Date(s.getTime() + it.durationMin*60000),
+    }));
   }
 
   const ics = [
@@ -992,31 +790,216 @@ function exportICS(){
     "PRODID:-//Sunday Recovery Planner//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
+    perthVTimeZone(),
     ...events,
     "END:VCALENDAR"
   ].join("\r\n");
 
   const blob = new Blob([ics], {type:"text/calendar;charset=utf-8"});
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement("a");
   a.href = url;
-  a.download = `RecoveryPlan-${state.seed}.ics`;
+  a.download = `RecoveryPlan-${state.startDateStr}-${state.seed}.ics`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 
-  toast("ICS exported. Import into Google Calendar.");
+  toast("Exported .ics (Australia/Perth).");
 }
 
-// ---------- Toast ----------
+/*** 11) One-click CTA ***/
+function generateThenExport(){
+  if (!validateInputs()) return;
+
+  // Ensure start date not in past
+  const start = parseYYYYMMDD(els.startDate.value);
+  if (start < todayLocal()){
+    setError("Start date is in the past. Pick the next Sunday.");
+    return;
+  }
+
+  // If no plan or plan belongs to different week, generate fresh
+  if (!state.plan || state.plan.startDateStr !== state.startDateStr || state.plan.seed !== state.seed){
+    generatePlan();
+  }
+  exportICS();
+}
+
+/*** 12) Persistence ***/
+function persist(){
+  const payload = {
+    startDateStr: state.startDateStr,
+    seed: state.seed,
+    plan: state.plan,
+    ui: {
+      midCount: els.midCount.value,
+      variety: els.variety.value,
+      preferLowCost: els.preferLowCost.checked,
+      includePlay: els.includePlay.checked,
+      amTime: els.amTime.value,
+      pmTime: els.pmTime.value,
+      midTime: els.midTime.value,
+      deepTime: els.deepTime.value,
+    }
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+function restore(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    // Restore UI (safe defaults if missing)
+    if (data.ui){
+      if (data.ui.midCount) els.midCount.value = data.ui.midCount;
+      if (data.ui.variety) els.variety.value = data.ui.variety;
+      els.preferLowCost.checked = !!data.ui.preferLowCost;
+      els.includePlay.checked = (data.ui.includePlay !== false);
+      if (data.ui.amTime) els.amTime.value = data.ui.amTime;
+      if (data.ui.pmTime) els.pmTime.value = data.ui.pmTime;
+      if (data.ui.midTime) els.midTime.value = data.ui.midTime;
+      if (data.ui.deepTime) els.deepTime.value = data.ui.deepTime;
+    }
+
+    // Restore plan only if it matches current start/seed later in init
+    if (data.plan) state.plan = data.plan;
+  } catch {}
+}
+
+/*** 13) Clipboard helpers ***/
+async function copyToClipboard(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch{
+    const ta=document.createElement("textarea");
+    ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+  }
+}
+async function copyPlanText(){
+  if (!state.plan) generatePlan();
+  const start = parseYYYYMMDD(state.startDateStr);
+  const end = new Date(start); end.setDate(start.getDate()+6);
+
+  const lines = [];
+  lines.push(`SUNDAY RECOVERY PLAN — ${state.startDateStr} — Seed ${state.seed}`);
+  lines.push(`${start.toDateString()} → ${end.toDateString()}`);
+  lines.push("");
+  const s = state.plan.slots;
+  lines.push(`AM (daily): ${s.am.title} (${s.am.durationMin}m) — ${s.am.instructions}`);
+  lines.push(`PM (daily): ${s.pm.title} (${s.pm.durationMin}m) — ${s.pm.instructions}`);
+  lines.push("");
+  s.mid.forEach((m,i)=>lines.push(`Mid #${i+1}: ${m.title} (${m.durationMin}m) — ${m.instructions}`));
+  lines.push("");
+  lines.push(`Deep: ${s.deep.title} (${s.deep.durationMin}m) — ${s.deep.instructions}`);
+  lines.push(`Anchor: ${s.anchor.title} (${s.anchor.durationMin}m) — ${s.anchor.instructions}`);
+
+  await copyToClipboard(lines.join("\n"));
+  toast("Plan copied.");
+}
+async function copyImportInstructions(){
+  const text = "Google Calendar (web): Settings → Import & export → Import → select the downloaded .ics → choose calendar → Import.";
+  await copyToClipboard(text);
+  toast("Import instructions copied.");
+}
+
+/*** 14) UI meta + init ***/
 let toastTimer=null;
 function toast(msg){
-  els.toast.textContent = msg;
+  els.toast.textContent=msg;
   els.toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>els.toast.classList.remove("show"), 1400);
+  toastTimer=setTimeout(()=>els.toast.classList.remove("show"), 1400);
+}
+function setSeedFromStart(){
+  state.seed = state.startDateStr; // deterministic by default
+  els.seedLabel.textContent = state.seed;
+}
+function updateStartUI(){
+  const d = parseYYYYMMDD(state.startDateStr);
+  els.startLabel.textContent = formatStartLabel(d);
+  els.seedLabel.textContent = state.seed;
+}
+
+function onStartDateChanged(){
+  state.startDateStr = els.startDate.value;
+  setSeedFromStart();
+  updateStartUI();
+
+  // If stored plan is for different week, don’t show stale plan
+  if (state.plan && (state.plan.startDateStr !== state.startDateStr || state.plan.seed !== state.seed)){
+    state.plan = null;
+  }
+  persist();
+  renderPlan();
+}
+
+function shuffleSeed(){
+  const stamp = Date.now().toString(36).slice(-4);
+  state.seed = `${state.startDateStr}-${stamp}`;
+  els.seedLabel.textContent = state.seed;
+  if (state.plan) state.plan.seed = state.seed;
+  persist();
+  renderPlan();
+  toast("Seed shuffled.");
+}
+
+function resetAll(){
+  state.plan = null;
+  persist();
+  renderPlan();
+  toast("Reset.");
+}
+
+function init(){
+  restore();
+
+  // default start date = next Sunday (or today if Sunday), but NEVER past
+  const defaultStart = nextSunday(new Date());
+  const startStr = dateToYYYYMMDD(defaultStart);
+
+  els.startDate.value = state.startDateStr || startStr;
+  state.startDateStr = els.startDate.value;
+
+  // If user restored a past date, bump it
+  const start = parseYYYYMMDD(state.startDateStr);
+  if (start < todayLocal()){
+    els.startDate.value = startStr;
+    state.startDateStr = startStr;
+  }
+
+  setSeedFromStart();
+  updateStartUI();
+
+  // Only keep restored plan if it matches current start+seed
+  if (state.plan && (state.plan.startDateStr !== state.startDateStr || state.plan.seed !== state.seed)){
+    state.plan = null;
+  }
+
+  renderPlan();
+  persist();
+
+  // Wire buttons
+  els.ctaBtn.onclick = generateThenExport;
+  els.generateBtn.onclick = () => { if (validateInputs()) generatePlan(); };
+  els.exportBtn.onclick = exportICS;
+  els.copyBtn.onclick = copyPlanText;
+  els.copyImportBtn.onclick = copyImportInstructions;
+
+  // Advanced changes
+  els.startDate.onchange = onStartDateChanged;
+  els.midCount.onchange = () => { persist(); if (state.plan) { state.plan=null; renderPlan(); } toast("Mid-week count updated."); };
+  els.variety.onchange = () => { persist(); toast("Variety updated."); };
+  els.preferLowCost.onchange = () => { persist(); toast("Preference saved."); };
+  els.includePlay.onchange = () => { persist(); toast("Preference saved."); };
+
+  els.amTime.onchange = () => { persist(); toast("Time saved."); };
+  els.pmTime.onchange = () => { persist(); toast("Time saved."); };
+  els.midTime.onchange = () => { persist(); toast("Time saved."); };
+  els.deepTime.onchange = () => { persist(); toast("Time saved."); };
+
+  els.shuffleSeedBtn.onclick = shuffleSeed;
+  els.resetBtn.onclick = resetAll;
 }
 
 init();

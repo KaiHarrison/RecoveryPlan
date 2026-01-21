@@ -6,15 +6,11 @@
   <title>Sunday Recovery Planner</title>
   <style>
     :root{
-
-      --bg:#0b0f14;
-      --text:#e6edf3;
-      --muted:#9fb0c0;
-      --border:rgba(255,255,255,.08);
-      --shadow: 0 14px 50px rgba(0,0,0,.45);
-      --radius:18px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --bg:#0b0f14; --panel:#0f1623; --text:#e6edf3; --muted:#9fb0c0;
+      --border:rgba(255,255,255,.08); --shadow:0 14px 50px rgba(0,0,0,.45);
+      --radius:18px; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      --accent:rgba(125,211,252,.9); --good:rgba(52,211,153,.9); --bad:rgba(251,113,133,.9);
     }
     *{box-sizing:border-box}
     body{
@@ -279,11 +275,22 @@
    - Minimal placeholder activity library (we expand next)
    ============================================================ */
 
-/*** 1) Activity Library (PLACEHOLDER)
-     Next message you’ll replace/expand these pools while preserving fields.
-     REQUIRED FIELDS per activity:
+/* ===========================
+   COPY/PASTE ACTIVITY LIBRARY
+   ===========================
+   Replace your existing placeholder:
+
+     const LIB = { ... }
+
+   with THIS entire block.
+
+   Notes:
+   - Fields are consistent with your app:
      { id, title, instructions, durationMin, bestTime, energy, cost, tags }
-***/
+   - Tags you already use: ["sleep","mood","stress","fitness","pain","play","clarity","social","warmth","creativity","recovery"]
+   - Energy levels: "verylow" | "low" | "med" | "high"
+*/
+
 const LIB = {
   am: [
     { id:"am_sun_walk_20", title:"Sunlight walk", instructions:"20 min outside. No podcast. Just light + movement.", durationMin:20, bestTime:"AM", energy:"low", cost:"low", tags:["sleep","mood","fitness"] },
@@ -421,6 +428,7 @@ const LIB = {
     { id:"panic_music_10", title:"One-song reset", instructions:"Play 2–3 calming songs. Sit still. Breathe slowly.", durationMin:10, bestTime:"Any", energy:"verylow", cost:"low", tags:["warmth","stress"] }
   ]
 };
+
 
 /*** 2) State + persistence ***/
 const STORAGE_KEY = "srp:v3";
@@ -602,7 +610,6 @@ function swapSlot(category, index=null, mode="swap"){
   renderPlan();
   toast(mode==="panic" ? "Panic swap applied." : "Swapped.");
 }
-window.swapNow = swapNow;
 
 window.__swapSlot = swapSlot;
 
